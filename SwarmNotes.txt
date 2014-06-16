@@ -1,0 +1,54 @@
+Okay, so how shall we do this?
+
+Requirements:
+
+// Kilobot
+
+While these are not the minimum set of functions needed
+for a collective robot, they strike a balance between what
+behaviors a collective of robots is capable of, and the cost
+of that collective. 
+
+1) move forward, 2) rotate, 3) communicate with nearby
+neighbors, 4) measure distance to nearby neighbors, and
+5) have sufficient memory
+
+Collective: programming, battery charging, turning on/off
+
+
+//Our Robot
+
+Individually:
+
+Move Forward
+Rotate
+Be programmable
+Wirelessly receive signals
+? Tell distance to objects
+IR fingerprint
+
+
+Communal:
+
+Mass programming?
+Mass recharging
+Mass turning on/off
+
+// Our Robot, Thoughts
+We get rid of the encoder requirement for driving straight by closing the feedback loop with 
+
+//Project Milestones
+
+One robot driving straight, turning based on webcam feedback
+Tracking more than one object at appropriate speeds (tie something to a string)
+
+Simulation software
+Imitate one robot
+
+
+
+
+Todo:
+Create jobs list and news site for makers 
+Aggregates cool youtube videos
+

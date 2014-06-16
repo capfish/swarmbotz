@@ -1,0 +1,14 @@
+import pygame
+import time
+import sys
+
+pygame.init()
+fpsClock = pygame.time.Clock()
+mainWindow = pygame.display.set_mode((640,480))
+
+while True:
+    mainWindow.fill(pygame.Color(255,255,255))
+    pygame.draw.circle(mainWindow, (0,255,0), (300,50), 20, 0)
+
+    pygame.display.update()
+    fpsClock.tick(30)

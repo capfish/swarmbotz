@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<swistrack>
+  <components>
+    <component type="TriggerTimer">
+      <enabledinterval value="1"/>
+    </component>
+    <component type="InputCameraUSB">
+      <enabledinterval value="1"/>
+    </component>
+    <component type="ConvertToColor">
+      <enabledinterval value="1"/>
+    </component>
+    <component type="ThresholdColorIndependent">
+      <enabledinterval value="1"/>
+      <parameter name="BlueThreshold" value="245"/>
+      <parameter name="GreenThreshold" value="242"/>
+      <parameter name="OrBool" value="false"/>
+      <parameter name="RedThreshold" value="237"/>
+    </component>
+    <component type="BinaryErosion">
+      <enabledinterval value="1"/>
+      <parameter name="Iterations" value="1"/>
+    </component>
+    <component type="BinaryDilation">
+      <enabledinterval value="1"/>
+      <parameter name="Iterations" value="2"/>
+    </component>
+    <component type="BlobDetectionMinMax">
+      <enabledinterval value="1"/>
+      <parameter name="MaxArea" value="10000"/>
+      <parameter name="MaxNumber" value="2"/>
+      <parameter name="MinArea" value="500"/>
+    </component>
+    <component type="NearestNeighborTracking">
+      <enabledinterval value="1"/>
+      <parameter name="MaxNumber" value="2"/>
+    </component>
+    <component type="OutputFile">
+      <enabledinterval value="1"/>
+    </component>
+  </components>
+  <server>
+    <port>3000</port>
+  </server>
+</swistrack>
