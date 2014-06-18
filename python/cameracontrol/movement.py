@@ -1,16 +1,34 @@
-import swisclient, SerialOut
-import time
-import sys
+import swisclient
+import time, sys, serial
 
 class swarm:    
 
     def __init__(self):
-        self.ser = SerialOut("", 9600)
+        self.ser = serial.Serial("/dev/ttyUSB0", 9600)
         self.swis = swisclient.SwisClient()
         self.NUM_ROBOTS = self.swis.NUM_ROBOTS
         self.lastHeadings = None # Differential control keeps track of past steps
         self.waypoints = "70,0,0 : 1,100,100"
-    
+        
+        # Initialize serial port components
+        time.sleep(2)
+        self.ser.setDTR()
+        self.ser.flushInput()
+        self.ser.flushOutput()
+        
+    # Close the serial connection
+    def closeSerial(self):
+        time.sleep(1)
+        self.ser.close()
+
+    def write(string):
+    #for key in string:                                                                    
+        #if (ord(key) == 13):                                                              
+            #key = chr(10)                                                                 
+    #ser.write(key)                                                                        
+        self.ser.write(string)
+
+
     # Uses a PD loop to generate velocity for each robot,
     # given a list of waypoints.
     def step(self):
@@ -44,8 +62,8 @@ class swarm:
             
             # Move the wheels at whichever speed is smallest, the output
             # value or the maximum allowable speed.
-            leftVelocity = 100*max(min((forward - rotate), motorMax), -1*motorMax)
-            rightVelocity = 100*max(min((forward + rotate), motorMax), -1*motorMax)
+            leftVelocity = int(100*max(min((forward - rotate), motorMax), -1*motorMax))
+            rightVelocity = int( 100*max(min((forward + rotate), motorMax), -1*motorMax))
 
             #setVelocity(leftVelocity, rightVelocity, i)
             
@@ -57,7 +75,9 @@ class swarm:
                 leftVelocity = 0.0
                 rightVelocity = 0.0
 
-            message = message + "\n" + str(i) + "," + str(leftVelocity) + "," + str(rightVelocity)
+  #          message = message + str(i) + "," + str(leftVelocity) + "," + str(rightVelocity) + ":"
+
+            message = message + str(leftVelocity) + "," + str(rightVelocity) + ":"
 
         self.lastHeadings = headings
         print message
@@ -80,6 +100,7 @@ def main():
                 print "Exiting program, stopping robots"
                 for i in range (0, bots):
                     s.setVelocity(0,0,i)
+                s.closeSerial()
                 sys.exit()
 
 if __name__ == '__main__':
