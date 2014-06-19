@@ -8,7 +8,7 @@ class swarm:
         self.swis = swisclient.SwisClient()
         self.NUM_ROBOTS = self.swis.NUM_ROBOTS
         self.lastHeadings = None # Differential control keeps track of past steps
-        self.waypoints = "70,0,0 : 1,100,100"
+        self.waypoints = "320,240 : 1,100"
         
         # Initialize serial port components
         time.sleep(2)
@@ -37,7 +37,7 @@ class swarm:
         D = 0.1
         DMax = 0.6
         rotationMax = 0.4
-        motorMax = 0.5
+        motorMax = 2
         triggerDistance = 5
         headings = self.swis.generateHeadings(self.waypoints) # Current headings
         distances = self.swis.generateDistances(self.waypoints) # Current distances
@@ -54,12 +54,13 @@ class swarm:
                 lastHeading = self.lastHeadings[i]
                 if abs(heading - lastHeading) < DMax:
                     output += D * (heading - lastHeading)
-        
+                    print "D control"
             forward = 1.0
+            print "output ", output
             # Rotate whichever is smallest, the output value
             # or the maximum allowable rotation value
             rotate = max(min(rotationMax, output), -1*rotationMax)
-            
+            print "rotate ", rotate
             # Move the wheels at whichever speed is smallest, the output
             # value or the maximum allowable speed.
             leftVelocity = int(100*max(min((forward - rotate), motorMax), -1*motorMax))

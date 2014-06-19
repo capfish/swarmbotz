@@ -7,10 +7,11 @@ class SwisClient:
         self.NUM_ROBOTS = 1
         self.host = 'localhost'
         self.port = 3000
-       
+        self.particlesBuffer = ["0,0,0,0,0"]
+#        print self.particlesBuffer[0]
     def readData(self):
         while 1:
-            print 'New Frame'
+#            print 'New Frame'
             sock = socket.socket()
             sock.connect((self.host,self.port))
             data = sock.recv(1024)
@@ -33,40 +34,56 @@ class SwisClient:
     # Generates a list of headings for each robot to their given waypoint
     def generateHeadings(self, waypoints):
         points = waypoints.split(" : ")
-#        particles = self.readData()
-        particles = ["0,0,70,70,3.142"] # For testing
+        particles = self.readData()
+#        particles = ["0,0,70,70,3.142"] # For testing
         headings = []
         for i in xrange(0, self.NUM_ROBOTS):
            # print particles
            # print points
-            p = particles[i].split(",")
             w = points[i].split(",")
-            x1 = p[2]
-            y1 = p[3]
-            angle = p[4]
+            if len(particles) > 0:
+                p = particles[i].split(",")
+                x1 = p[2]
+                y1 = p[3]
+                angle = p[4]
+            else:
+                pastP = self.particlesBuffer[i].split(",")
+                x1 = pastP[2]
+                y1 = pastP[3]
+                angle = pastP[4]
             x2 = w[0]
             y2 = w[1]
 
             h = self.headingTo(x1, y1, x2, y2, angle)
             headings.append(h)
-        print headings
+        if len(particles) > 0:
+            self.particlesBuffer = particles
+#        print headings
         return headings
     
     def generateDistances(self, waypoints):
-        #particles = self.readData()
-        particles = ["0,0,70,70,3.142"]
+        particles = self.readData()
+        #particles = ["0,0,70,70,3.142"]
         points = waypoints.split(" : ")
         distances = []
-        for i in xrange(0, self.NUM_ROBOTS):
-            p = particles[i].split(",")
-            w = points[i].split(",")
-            x1 = float(p[2])
-            y1 = float(p[3])
+        for j in xrange(0, self.NUM_ROBOTS):
+            print j
+            w = points[j].split(",")
+            if len(particles) > 0:
+                p = particles[j].split(",")
+                x1 = float(p[2])
+                y1 = float(p[3])
+            else:
+                pastP = self.particlesBuffer[j].split(",")
+                x1 = float(pastP[2])
+                y1 = float(pastP[3])
             x2 = float(w[0])
             y2 = float(w[1])
             dist = math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2))
             distances.append(dist)
-        print distances
+        if len(particles) > 0:
+            self.particlesBuffer = particles
+#        print distances
         return distances
 
     # Returns the heading from a robot to a waypoint.
