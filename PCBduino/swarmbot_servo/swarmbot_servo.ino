@@ -1,4 +1,6 @@
 #include <SPI.h>
+#include <Servo.h> 
+
 
 // NRF Register addresses
 const byte CONFIG = 0x00;
@@ -37,7 +39,20 @@ const int IRQ = 2;
 char packet[PW];
 
 int led = A2;
+int rLED = A3;
 boolean ledState = LOW;
+boolean msgCorrect = HIGH;
+char longPacket[99];
+char msg[] = "htis is a long packet of ninety-nine characters that we are checking for accuracy! 123 orange mango";
+char msg2[] = "HIGH";
+int i = 0;
+int absSpeed = 90;
+int fSpeed = 90;
+int bSpeed = 90;
+
+Servo Lservo;  // create servo object to control a servo 
+Servo Rservo;  // create servo object to control a servo 
+ 
 
 void setup() {
   pinMode(nRF, OUTPUT);
@@ -46,18 +61,98 @@ void setup() {
   SPI.setBitOrder(MSBFIRST);
   SPI.setDataMode(SPI_MODE0);
   digitalWrite(nRFCSN, HIGH);
+  pinMode(led, OUTPUT);
+  pinMode(rLED, OUTPUT);
   Serial.begin(9600);
   setupnRF();
-  pinMode(led, OUTPUT);
+  
+  Lservo.attach(3);  // attaches the servo on pin 9 to the servo object 
+  Rservo.attach(4);  // attaches the servo on pin 9 to the servo object 
+
 }
 
+// f fwd, b bwd, r turn right, l turn left
+// speed is from 0 to 90, so 0,1,2,3,4,5,6,7,8,9
 void loop() {
-  if(digitalRead(IRQ) == LOW) {
-    readPacket();
-    Serial.println(packet[0]);
-    blink();
-  }
+    if(digitalRead(IRQ) == LOW) {
+      readPacket();
+      Serial.println(packet[0]);
+      char msg = packet[0];
+      switch (msg) {
+        case '0':
+          absSpeed = 0;
+          Serial.println("speed 0");
+          break;
+        case '1':
+          absSpeed = 10;
+          break;
+        case '2':
+          absSpeed = 20;
+          break;
+        case '3':
+          absSpeed = 30;
+          break;
+        case '4':
+          absSpeed = 40;
+          break;
+        case '5':
+          absSpeed = 50;
+          break;
+        case '6':
+          absSpeed = 60;
+          break;
+        case '7':
+          absSpeed = 70;
+          break;
+        case '8':
+          absSpeed = 80;
+          break;
+        case '9':
+          absSpeed = 90;
+          break;
+          
+        case 'l':
+          Serial.println("case l!");
+          fSpeed = constrain(map(absSpeed, 0,90, 90,0),0,90);
+          bSpeed = constrain(absSpeed+90,90,180);
+
+          Lservo.write(fSpeed);
+          Rservo.write(fSpeed);
+          break;
+        case 'r':
+          Serial.println("case r!");
+          bSpeed = constrain(absSpeed+90,90,180);
+          Lservo.write(bSpeed);
+          Rservo.write(bSpeed);
+          break;
+        case 'f':
+          Serial.println("case f!");
+          fSpeed = constrain(map(absSpeed,0,90, 90,0),0,90);
+          bSpeed = constrain(absSpeed+90,90,180);
+          Lservo.write(fSpeed);
+          Rservo.write(bSpeed);
+          break;
+        case 'b':
+          Serial.println("case b!");
+          fSpeed = constrain(map(absSpeed,0,90, 90,0),0,90);
+          bSpeed = constrain(absSpeed+90,90,180);
+          Lservo.write(bSpeed);
+          Rservo.write(fSpeed);
+          break;
+
+      }
+//      char msg = 'a';
+//      if (packet[0] == msg) {
+//        digitalWrite(led, HIGH);
+//        digitalWrite(rLED, LOW);
+//      }
+//      else {
+//        digitalWrite(led, LOW);
+//        digitalWrite(rLED, HIGH);
+//      }
+    }
 }
+
 
 void blink() {
   if (ledState == HIGH) {
@@ -71,7 +166,6 @@ void blink() {
     delay(100);
   }
 }
-
 
 void readPacket() {
   digitalWrite(nRF, LOW);
@@ -153,3 +247,4 @@ void setupnRF() {
   digitalWrite(nRF, HIGH); //enable the chip to go into RX
   delayMicroseconds(150);
 }
+

@@ -4,8 +4,10 @@
 
 const int stepsPerRevolution = 24; 
 
-Stepper leftStepper(stepsPerRevolution, 7,A1,8,A0);           
-Stepper rightStepper(stepsPerRevolution, 3,6,4,5);
+//Stepper leftStepper(stepsPerRevolution, 7,A1,8,A0);           
+//Stepper rightStepper(stepsPerRevolution, 3,6,4,5);
+//Stepper leftStepper(stepsPerRevolution, 7,A1,8,A0); 
+Stepper rightStepper(stepsPerRevolution, 3,4,5,6);
 
 int led = A3;
 boolean ledState = LOW;

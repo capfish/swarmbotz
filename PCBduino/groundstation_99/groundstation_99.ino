@@ -141,5 +141,5 @@ void setupnRF() {
   nRFWriteRegister(CONFIG, RXMODE); //put the nRF in RX and mask all but RX_DR
   nRFWriteCommand(FLUSH_RX); //get rid of anything left in the RX FIFO
   digitalWrite(nRF, HIGH); //enable the chip to go into RX
-  delayMicroseconds(150);
+  delayMicroseconds(1000);
 }

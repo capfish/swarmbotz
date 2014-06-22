@@ -34,10 +34,6 @@ const byte FLUSH_RX = 0xE2;
 const int nRF = 9;          //p3.5
 const int nRFCSN = 10;
 const int IRQ = 2;
-char packet[PW];
-
-int led = A2;
-boolean ledState = LOW;
 
 void setup() {
   pinMode(nRF, OUTPUT);
@@ -48,45 +44,17 @@ void setup() {
   digitalWrite(nRFCSN, HIGH);
   Serial.begin(9600);
   setupnRF();
-  pinMode(led, OUTPUT);
 }
-
 void loop() {
-  if(digitalRead(IRQ) == LOW) {
-    readPacket();
-    Serial.println(packet[0]);
-    blink();
+  if(Serial.available() > 0) {
+    byte input[1];
+    input[0] = Serial.read();
+    transmitPacket(input, sizeof(input));
+    Serial.println(input[0]);
   }
 }
 
-void blink() {
-  if (ledState == HIGH) {
-    ledState = LOW;
-    digitalWrite(led, ledState);
-    delay(100);
-  }
-  else {
-    ledState = HIGH;
-    digitalWrite(led, ledState);
-    delay(100);
-  }
-}
-
-
-void readPacket() {
-  digitalWrite(nRF, LOW);
-  digitalWrite(nRFCSN,LOW);
-  SPI.transfer(R_RX_PAYLOAD);
-  for(int i=0; i < PW; i++) {
-    packet[i] = SPI.transfer(0);
-  }
-  digitalWrite(nRFCSN,HIGH);
-  delayMicroseconds(1);
-  digitalWrite(nRF,HIGH);
-  nRFWriteRegister(STATUS,CLRIRQ);
-}
-
-void transmitPacket(int data[], size_t datalength) {
+void transmitPacket(byte data[], size_t datalength) {
   digitalWrite(nRF, LOW);
   nRFWriteRegister(CONFIG,TXMODE);
   nRFWriteCommand(FLUSH_TX);

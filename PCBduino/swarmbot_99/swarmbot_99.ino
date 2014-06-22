@@ -40,7 +40,7 @@ int led = A2;
 boolean ledState = LOW;
 boolean msgCorrect = HIGH;
 char longPacket[99];
-char msg[ ] = "htis is a long packet of ninety-nine characters that we are checking for accuracy! 123 orange mango";
+char msg[] = "htis is a long packet of ninety-nine characters that we are checking for accuracy! 123 orange mango";
 int i = 0;
 
 void setup() {
@@ -61,15 +61,19 @@ void loop() {
     //Serial.println(packet[0]);
     longPacket[i] = packet[0];
     i++;
+    //blink();
     }
     if (i == 99){
+          //blink();
           Serial.println(longPacket);
           i++;
           for (int j = 0; j<99; j++){
             if (longPacket[j] != msg[j]){
-              msgCorrect = LOW;
+              msgCorrect = LOW; //LED will turn off if not the same msg
+              //blink();  
             }
           digitalWrite(led, msgCorrect);
+   
           }
 
     }
@@ -170,3 +174,4 @@ void setupnRF() {
   digitalWrite(nRF, HIGH); //enable the chip to go into RX
   delayMicroseconds(150);
 }
+
