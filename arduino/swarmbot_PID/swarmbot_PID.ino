@@ -37,6 +37,7 @@ const int nRF = 9;          //p3.5
 const int nRFCSN = 10;
 const int IRQ = 2;
 char packet[PW];
+String message;
 
 const int identifier = 0;
 
@@ -46,7 +47,7 @@ const int stepsPerRevolution = 24;
 Stepper leftStepper(stepsPerRevolution, 7,A1,8,A0);            
 Stepper rightStepper(stepsPerRevolution, 3,6,4,5); 
 
-int led = A4;
+int led = A2;
 boolean ledState = LOW;
 long leftVelocity = 0;
 long rightVelocity = 0;
@@ -55,76 +56,90 @@ long rightVelocity = 0;
 void setup() {
   pinMode(nRF, OUTPUT);
   pinMode(nRFCSN, OUTPUT);
+  pinMode(led, OUTPUT);
   SPI.begin();
   
   SPI.setBitOrder(MSBFIRST);
   SPI.setDataMode(SPI_MODE0);
   digitalWrite(nRFCSN, HIGH);
+  //digitalWrite(led, HIGH);
   Serial.begin(9600);
   setupnRF();
+  
 }
 
 void loop() {
+  //digitalWrite(led, HIGH);
   if(digitalRead(IRQ) == LOW) {
+    digitalWrite(led, HIGH);
     readPacket();
-    Serial.println(packet[0]);
+    Serial.println(packet);
     // rightVelocity = packet[0]
     // leftVelocity = packet[1]
     // leftVelocity is +- velocity
-
-////////////////////
     
    
     
-    
-//    String message(packet);
- //   int colonPosition = 0;
-  //  String commands[100] = {"0"};
- //   int i = 0;
-  //  String command = "0";
-//    while(colonPosition >=0) {
-//      colonPosition = message.indexOf(":");
-//      if(colonPosition != -1)
-//      {
-//          command = message.substring(0,colonPosition);
-//          commands[i] = command;      
-//          i = i+1;
-//          message = message.substring(colonPosition+1, message.length());
-//      }
-//      
-//      
-//      else
-//      {  
-//         if(message.length() > 0) {
-//           commands[i] = message; }
-//      }
-//      
-//    }
-//    int comma = commands[identifier].indexOf(",");
-    
-//    int leftVelocity = commands[identifier].substring(0, comma).toInt();
-//    int rightVelocity = commands[identifier].substring(comma+1, commands[identifier].length()).toInt();
-//    Serial.println(");
+    if (packet[0] != 'X') {
+        message += packet[0];
+      }
+    else {
+      //String message(packet);
+      //Serial.println(message);
+      int colonPosition = 0;
+      String commands[100] = {"0"};
+      int i = 0;
+      String command = "0";
+    while(colonPosition >=0) {
+      colonPosition = message.indexOf(":");
+      if(colonPosition != -1)
+      {
+          command = message.substring(0,colonPosition);
+          commands[i] = command;      
+          i = i+1;
+          message = message.substring(colonPosition+1, message.length());
+          //Serial.println("Command " + command);
+      }
+      
+      
+      else
+      {  
+         if(message.length() > 0) {
+           commands[i] = message; }
+      }
+      
+    }
+    int comma = commands[identifier].indexOf(",");
+    //Serial.println(comma);
+    int leftVelocity = commands[identifier].substring(0, comma).toInt();
+    int rightVelocity = commands[identifier].substring(comma+1, commands[identifier].length()).toInt();
+    Serial.println(leftVelocity);
+    Serial.println(rightVelocity);
 //////////////////////    
-//    
-//    leftStepper.setSpeed(abs(leftVelocity));
-//    rightStepper.setSpeed(abs(rightVelocity));
-//    //blink();
-//    
-//    if (leftVelocity>0){
-//    leftStepper.step(-stepsPerRevolution/10);
-//    }
-//    else {
-//    leftStepper.step(stepsPerRevolution/10);
-//    }
-//    
-//    if (rightVelocity>0){
-//    rightStepper.step(stepsPerRevolution/10);
-//    }
-//    else {
-//    rightStepper.step(-stepsPerRevolution/10);
-//    }
+    
+    //leftStepper.setSpeed(abs(leftVelocity));
+    //rightStepper.setSpeed(abs(rightVelocity));
+    //blink();
+    
+    //digitalWrite(led, LOW);
+    if (leftVelocity>0){
+    leftStepper.step(-stepsPerRevolution/10);
+    digitalWrite(led, LOW);
+    }
+    else {
+    leftStepper.step(stepsPerRevolution/10);
+    //digitalWrite(led, LOW);
+    }
+    
+    if (rightVelocity>0){
+    rightStepper.step(stepsPerRevolution/10);
+    }
+    else {
+    rightStepper.step(-stepsPerRevolution/10);
+    }
 //    //delay(100);
+    message = "";
+    }
   }
 }
   

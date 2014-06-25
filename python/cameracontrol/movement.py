@@ -78,7 +78,7 @@ class swarm:
 
   #          message = message + str(i) + "," + str(leftVelocity) + "," + str(rightVelocity) + ":"
 
-            message = message + str(leftVelocity) + "," + str(rightVelocity) + ":"
+            message = message + str(leftVelocity) + "," + str(rightVelocity) + ":X"
 
         self.lastHeadings = headings
         print message
