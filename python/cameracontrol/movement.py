@@ -8,7 +8,8 @@ class swarm:
         self.swis = swisclient.SwisClient()
         self.NUM_ROBOTS = self.swis.NUM_ROBOTS
         self.lastHeadings = None # Differential control keeps track of past steps
-        self.waypoints = "320,240 : 1,100"
+        self.lastDistances = None
+        self.waypoints = "320,240 : 1,100 : 20,20 : 30,40 : 50,40"
         
         # Initialize serial port components
         time.sleep(2)
@@ -39,19 +40,21 @@ class swarm:
         rotationMax = 0.4
         motorMax = 2
         triggerDistance = 5
-        headings = self.swis.generateHeadings(self.waypoints) # Current headings
-        distances = self.swis.generateDistances(self.waypoints) # Current distances
+        distances, headings = self.swis.generateHeadings(self.waypoints) # Current headings
+        
+        #distances = self.swis.generateDistances(self.waypoints) # Current distances
+        
         # Go through each robot and update its velocity
         # TODO add functionality to move to next waypoint
         for i in range(0, self.NUM_ROBOTS):
-            heading = headings[i]
+            heading = headings[i][1]
             
             # P control
             output = P * heading
             
             # If the angle isn't too big, use D control
             if self.lastHeadings != None:
-                lastHeading = self.lastHeadings[i]
+                lastHeading = self.lastHeadings[i][1]
                 if abs(heading - lastHeading) < DMax:
                     output += D * (heading - lastHeading)
                     print "D control"
@@ -70,7 +73,7 @@ class swarm:
             
             # If the robot is close enough to a waypoint, iterate to the
             # next waypoint for that robot
-            distance = distances[i]
+            distance = distances[i][1]
             if distance < triggerDistance:
                 # TODO add code to move to next waypoint
                 leftVelocity = 0.0
