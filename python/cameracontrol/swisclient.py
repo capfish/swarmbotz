@@ -50,7 +50,7 @@ class SwisClient:
         if len(particles) == self.NUM_ROBOTS and self.initialized == False:
             for i in xrange(self.NUM_ROBOTS):
                 p = particles[i].split(",")
-                if p[1] > 0:
+                if int(p[1]) > 0:
                     self.ids[i] = p[1]
                     numBotsInitialized = numBotsInitialized + 1
                 #print " ids ", len(self.ids)
@@ -69,6 +69,7 @@ class SwisClient:
 #        print particles
 #        particles = ["0,0,70,70,3.142"] # For testing
             headings = []
+            idents = []
             ident = 0
             print "headings"
             for i in xrange(0, self.NUM_ROBOTS):
@@ -91,7 +92,7 @@ class SwisClient:
                         idx, dist = self.findNearestMatch(x1, y1)
                     #                    print idx
                         ident = int(self.ids[idx])
-#                    print ident
+                    #print ident
                         
                 else:
                 #pastP = self.particlesBuffer[i].split(",")
@@ -106,8 +107,20 @@ class SwisClient:
                 y2 = w[1]
                 h = self.headingTo(x1, y1, x2, y2, angle)
                 print ident
+                if ident in idents:
+                    print "Duplicate found"
+#                    return None, None
+                idents.append(ident)
                 headings.append((ident,h))
 #        print 'headings = ',  headings
+#            def find_duplicates(seq):
+ #               seen = set()
+ #               seen_add = seen.add
+ #               seen_twice = set( x for x in seq if x in seen or seen_add(x) )
+ #               if len(seen_twice) > 0:
+ #                   return True
+ #           if find_duplicates(headings):
+ #               return None, None
             sortedHeadings = sorted(headings, key=lambda idsort: idsort[0])
 #        print 'Sorted headings = ', sortedHeadings
         #print particles
@@ -137,15 +150,17 @@ class SwisClient:
                 x2 = float(w[0])
                 y2 = float(w[1])
                 dist = math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2))
-                print ident
+#                print ident
                 distances.append((ident,dist))
 
             if len(particles) == self.NUM_ROBOTS:
                 self.particlesBuffer = particles
-#        print 'distances = ', distances
+#        
+            
+            #print 'distances = ', distances
             sortedDistances = sorted(distances, key=lambda idsort: idsort[0])
 #        print 'sorted distances = ', sortedDistances
-
+        
         return sortedDistances, sortedHeadings
 
     # Returns the heading from a robot to a waypoint.
@@ -176,18 +191,19 @@ class SwisClient:
         y1 = float(y1)
         x2 = float(pastP[2])
         y2 = float(pastP[3])
-        print "x2, y2, ", x2, y2
+        #print "x2, y2, ", x2, y2
         distance = self.distanceTo(x1, y1, x2, y2)
         for i in xrange(1, self.NUM_ROBOTS):
             pastP = self.particlesBuffer[i].split(",")
             x2 = float(pastP[2])
             y2 = float(pastP[3])
-            print "x2, y2, ", x2, y2
+        #    print "x2, y2, ", x2, y2
             d = self.distanceTo(x1, y1, x2, y2)
+            #print d
             if d < distance:
                 distance = d
                 index = i
-        print "nearest match", index, distance, x1, y1, x2, y2
+        #print "nearest match", index, distance, x1, y1, x2, y2
         return index, distance
             
         
