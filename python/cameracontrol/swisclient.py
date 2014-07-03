@@ -8,18 +8,21 @@ class SwisClient:
         self.host = 'localhost'
         self.port = 3000
         self.particlesBuffer = ["0,0,0,0,0","0,0,0,0,0","0,0,0,0,0"]
+        self.ids = [1,2,3]
+        self.initialized = False
 #        print self.particlesBuffer[0]
     def readData(self):
-        while 1:
+#        while 1:
 #            print 'New Frame'
             sock = socket.socket()
             sock.connect((self.host,self.port))
             data = sock.recv(1024)
+#            print data
             particles = []
             dataPacket = True
             while dataPacket:
                 data = sock.recv(1024)
-                if 'PARTICLE' in data:
+                if 'PARTICLE' in data and not 'FRAMENUMBER' in data:
                     particles.append(data)
 #                    print data
                 if 'STEP_STOP' in data:
@@ -34,59 +37,116 @@ class SwisClient:
 
     # Generates a list of headings for each robot to their given waypoint
     def generateHeadings(self, waypoints):
+        numBotsInitialized = 0
         points = waypoints.split(" : ")
-        particles = self.readData()
-        #print particles
+        rawParticles = self.readData()
+        particles = sorted(rawParticles, key=lambda idsort: idsort[1])
+#        print 'length', len(particles)
+#        print self.initialized
+        print "particles, ", len(particles)
+        if len(particles) < self.NUM_ROBOTS and self.initialized == False:
+            return None, None
+
+        if len(particles) == self.NUM_ROBOTS and self.initialized == False:
+            for i in xrange(self.NUM_ROBOTS):
+                p = particles[i].split(",")
+                if p[1] > 0:
+                    self.ids[i] = p[1]
+                    numBotsInitialized = numBotsInitialized + 1
+                #print " ids ", len(self.ids)
+            #self.ids.sort()
+#            return None, None
+        #if len(particles) == self.NUM_ROBOTS:
+            #print " ids ", len(self.ids)
+            if numBotsInitialized == self.NUM_ROBOTS:
+                self.initialized = True
+            return None, None
+#            print "TRUE"
+        
+        
+
+        if self.initialized == True:
+#        print particles
 #        particles = ["0,0,70,70,3.142"] # For testing
-        headings = []
-        for i in xrange(0, self.NUM_ROBOTS):
+            headings = []
+            ident = 0
+            print "headings"
+            for i in xrange(0, self.NUM_ROBOTS):
 #            print i
            # print particles
            # print points
-            w = points[i].split(",")
-            if len(particles) > i:                
-                p = particles[i].split(",")
-                ident = p[1]
-                x1 = p[2]
-                y1 = p[3]
-                angle = p[4]
-            else:
+                w = points[i].split(",")
                 pastP = self.particlesBuffer[i].split(",")
-                ident = pastP[1]
-                x1 = pastP[2]
-                y1 = pastP[3]
-                angle = pastP[4]
-            x2 = w[0]
-            y2 = w[1]
-
-            h = self.headingTo(x1, y1, x2, y2, angle)
-            headings.append((ident,h))
-        print 'headings = ',  headings
-    
+                if len(particles) > i:                
+                    p = particles[i].split(",")
+                #pastP = self.particlesBuffer[i].split(",")
+                #print " i ", i
+                    ident = int(p[1])
+                    x1 = p[2]
+                    y1 = p[3]
+                    angle = p[4]
+                    pastIdent = int(self.ids[i])
+#                print pastIdent
+                    if ident not in self.ids:
+                        idx, dist = self.findNearestMatch(x1, y1)
+                    #                    print idx
+                        ident = int(self.ids[idx])
+#                    print ident
+                        
+                else:
+                #pastP = self.particlesBuffer[i].split(",")
+                #print "past : ", pastP
+                    #ident = int(self.ids[i])
+                    x1 = pastP[2]
+                    y1 = pastP[3]
+                    angle = pastP[4]
+                    idx, dist = self.findNearestMatch(x1, y1)
+                    ident = int(self.ids[idx])
+                x2 = w[0]
+                y2 = w[1]
+                h = self.headingTo(x1, y1, x2, y2, angle)
+                print ident
+                headings.append((ident,h))
+#        print 'headings = ',  headings
+            sortedHeadings = sorted(headings, key=lambda idsort: idsort[0])
+#        print 'Sorted headings = ', sortedHeadings
         #print particles
         #particles = ["0,0,70,70,3.142"]
-        distances = []
-        for j in xrange(0, self.NUM_ROBOTS):
-            print j
-            w = points[j].split(",")
-            if len(particles) > j:
-                p = particles[j].split(",")
-                ident = p[1]
-                x1 = float(p[2])
-                y1 = float(p[3])
-            else:
+            distances = []
+            print "distances"
+            for j in xrange(0, self.NUM_ROBOTS):
+            #print j
+                w = points[j].split(",")
                 pastP = self.particlesBuffer[j].split(",")
-                ident = pastP[1]
-                x1 = float(pastP[2])
-                y1 = float(pastP[3])
-            x2 = float(w[0])
-            y2 = float(w[1])
-            dist = math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2))
-            distances.append((ident,dist))
-        if len(particles) == self.NUM_ROBOTS:
-            self.particlesBuffer = particles
-        print 'distances = ', distances
-        return distances, headings
+                if len(particles) > j:
+                    p = particles[j].split(",")
+                    ident = int(p[1])
+                    x1 = float(p[2])
+                    y1 = float(p[3])
+                    pastIdent = int(self.ids[j])
+                    if ident not in self.ids:
+                        idx, dist = self.findNearestMatch(x1,y1)
+                        ident = int(self.ids[idx])
+                else:
+            #    pastP = self.particlesBuffer[j].split(",")
+                    #ident = int(self.ids[j])
+                    x1 = float(pastP[2])
+                    y1 = float(pastP[3])
+                    idx, dist =self.findNearestMatch(x1, y1)
+                    ident = int(self.ids[idx])
+                x2 = float(w[0])
+                y2 = float(w[1])
+                dist = math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2))
+                print ident
+                distances.append((ident,dist))
+
+            if len(particles) == self.NUM_ROBOTS:
+                self.particlesBuffer = particles
+#        print 'distances = ', distances
+            sortedDistances = sorted(distances, key=lambda idsort: idsort[0])
+#        print 'sorted distances = ', sortedDistances
+
+        return sortedDistances, sortedHeadings
 
     # Returns the heading from a robot to a waypoint.
     # x1, y1, and theta are the position and absolute angle
@@ -100,10 +160,40 @@ class SwisClient:
         alpha = math.atan2(y2-y1, x2-x1)
         theta = angle - alpha
         return theta
+
+    def distanceTo(self, x1, y1, x2, y2):
+        x1 = float(x1)
+        x2 = float(x2)
+        y1 = float(y1)
+        y2 = float(y2)
+        distance = math.sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2))
+        return distance
+
+    def findNearestMatch(self, x1, y1):
+        index = 0
+        pastP = self.particlesBuffer[0].split(",")
+        x1 = float(x1)
+        y1 = float(y1)
+        x2 = float(pastP[2])
+        y2 = float(pastP[3])
+        print "x2, y2, ", x2, y2
+        distance = self.distanceTo(x1, y1, x2, y2)
+        for i in xrange(1, self.NUM_ROBOTS):
+            pastP = self.particlesBuffer[i].split(",")
+            x2 = float(pastP[2])
+            y2 = float(pastP[3])
+            print "x2, y2, ", x2, y2
+            d = self.distanceTo(x1, y1, x2, y2)
+            if d < distance:
+                distance = d
+                index = i
+        print "nearest match", index, distance, x1, y1, x2, y2
+        return index, distance
+            
         
 def main():
-    client = Swisclient()
-    client.readData()
-
+#    client = Swisclient()
+#    client.readData()
+    pass
 if __name__ == '__main__':
     main()

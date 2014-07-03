@@ -1,35 +1,16 @@
-import swisclient
-import time, sys, serial
+import swisclient, SerialOut
+import time
+import sys
 
 class swarm:    
 
     def __init__(self):
-        self.ser = serial.Serial("/dev/ttyUSB0", 9600)
+        self.ser = SerialOut("", 9600)
         self.swis = swisclient.SwisClient()
         self.NUM_ROBOTS = self.swis.NUM_ROBOTS
         self.lastHeadings = None # Differential control keeps track of past steps
-        self.lastDistances = None
-        self.waypoints = "320,240 : 1,100 : 20,20 : 30,40 : 50,40"
-        
-        # Initialize serial port components
-        time.sleep(2)
-        self.ser.setDTR()
-        self.ser.flushInput()
-        self.ser.flushOutput()
-        print "__INIT__"
-    # Close the serial connection
-    def closeSerial(self):
-        time.sleep(1)
-        self.ser.close()
-
-    def write(string):
-    #for key in string:                                                                    
-        #if (ord(key) == 13):                                                              
-            #key = chr(10)                                                                 
-    #ser.write(key)                                                                        
-        self.ser.write(string)
-
-
+        self.waypoints = "70,0,0 : 1,100,100"
+    
     # Uses a PD loop to generate velocity for each robot,
     # given a list of waypoints.
     def step(self):
@@ -38,52 +19,45 @@ class swarm:
         D = 0.1
         DMax = 0.6
         rotationMax = 0.4
-        motorMax = 2
+        motorMax = 0.5
         triggerDistance = 5
-        distances, headings = self.swis.generateHeadings(self.waypoints) # Current headings
-        if distances == None and headings == None:
-            return
-        
-        #distances = self.swis.generateDistances(self.waypoints) # Current distances
-        
+        headings = self.swis.generateHeadings(self.waypoints) # Current headings
+        distances = self.swis.generateDistances(self.waypoints) # Current distances
         # Go through each robot and update its velocity
         # TODO add functionality to move to next waypoint
         for i in range(0, self.NUM_ROBOTS):
-            heading = headings[i][1]
+            heading = headings[i]
             
             # P control
             output = P * heading
             
             # If the angle isn't too big, use D control
             if self.lastHeadings != None:
-                lastHeading = self.lastHeadings[i][1]
+                lastHeading = self.lastHeadings[i]
                 if abs(heading - lastHeading) < DMax:
                     output += D * (heading - lastHeading)
-#                    print "D control"
+        
             forward = 1.0
-#            print "output ", output
             # Rotate whichever is smallest, the output value
             # or the maximum allowable rotation value
             rotate = max(min(rotationMax, output), -1*rotationMax)
-#            print "rotate ", rotate
+            
             # Move the wheels at whichever speed is smallest, the output
             # value or the maximum allowable speed.
-            leftVelocity = int(100*max(min((forward - rotate), motorMax), -1*motorMax))
-            rightVelocity = int( 100*max(min((forward + rotate), motorMax), -1*motorMax))
+            leftVelocity = 100*max(min((forward - rotate), motorMax), -1*motorMax)
+            rightVelocity = 100*max(min((forward + rotate), motorMax), -1*motorMax)
 
             #setVelocity(leftVelocity, rightVelocity, i)
             
             # If the robot is close enough to a waypoint, iterate to the
             # next waypoint for that robot
-            distance = distances[i][1]
+            distance = distances[i]
             if distance < triggerDistance:
                 # TODO add code to move to next waypoint
                 leftVelocity = 0.0
                 rightVelocity = 0.0
 
-  #          message = message + str(i) + "," + str(leftVelocity) + "," + str(rightVelocity) + ":"
-
-            message = message + str(leftVelocity) + "," + str(rightVelocity) + ":X"
+            message = message + "\n" + str(i) + "," + str(leftVelocity) + "," + str(rightVelocity)
 
         self.lastHeadings = headings
         print message
@@ -97,8 +71,8 @@ class swarm:
         pass
     
 def main():
-#        s = swarm()
-#        bots = s.NUM_ROBOTS
+        s = swarm()
+        bots = s.NUM_ROBOTS
         while 1:
             try:
                 s.step()
@@ -106,10 +80,7 @@ def main():
                 print "Exiting program, stopping robots"
                 for i in range (0, bots):
                     s.setVelocity(0,0,i)
-                s.closeSerial()
                 sys.exit()
 
 if __name__ == '__main__':
-    s = swarm()
-    bots = s.NUM_ROBOTS
     main()
