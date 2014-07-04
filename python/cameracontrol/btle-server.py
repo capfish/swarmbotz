@@ -127,12 +127,8 @@ def main():
         print 'Connected by', addr
         addresses = sys.argv[2:]
     else:
-        sys.exit("Usage: sudo python gattcall.py $BLUETOOTH_ADDRESS \n(example: sudo python gattcall.py E9:D9:7A:EB:BC:35])")
+        sys.exit("Usage: sudo python btle-server.py $PORTNUM $BLUETOOTH_ADDRESS1 $BTLE_ADR2")
 
-    delay = '100'
-
-    # cmd format: 0-255 rval, gval,blue, 0-180 lspeed, rspeed
-    cmdList = (100,0,0,100,100)
 
     connections = []
     for address in addresses:
@@ -164,17 +160,18 @@ def main():
             if not data: break
             strRGB = data
             cmd = [int(s) for s in strRGB.split(',')]
-            cmdRed = cmd[0:3]
-            cmdGreen = cmd[3:6]
-            cmdBlue= cmd[6:9]
             print cmd
-            #botnum = int(raw_input('a robot num'))
-            #cmd = raw_input('some rgb command')
-            #cmd = (100,0,0,100,100)
-            queues[0].put(cmdRed)
-            queues[1].put(cmdGreen)
-            queues[2].put(cmdBlue)
-            # look for things to add to Queue
+
+            botnum = cmd[0]
+            botcmd = cmd[1:4]
+            queues[botnum].put(botcmd)
+
+            #cmdRed = cmd[0:3]
+            #cmdGreen = cmd[3:6]
+            #cmdBlue= cmd[6:9]
+            #queues[0].put(cmdRed)
+            #queues[1].put(cmdGreen)
+            #queues[2].put(cmdBlue)
         conn.close()
         print 'closing connections',connections
         run_event.clear()
