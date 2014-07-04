@@ -91,8 +91,8 @@ class swarm:
 
             #Alright! Now convert to 0 to 180 instead of -motorMax to +motorMax
             print 'before mapping to servo vals', leftVelocity, rightVelocity
-            leftVelocity = translate(leftVelocity, -1*motorMax, motorMax, 0, 180)
-            rightVelocity = translate(rightVelocity, -1*motorMax, motorMax, 0, 180)
+            leftVelocity = translate(leftVelocity, -1*motorMax, motorMax, 80,100)
+            rightVelocity = translate(rightVelocity, -1*motorMax, motorMax, 80,100)
 
 
             #setVelocity(leftVelocity, rightVelocity, i)
