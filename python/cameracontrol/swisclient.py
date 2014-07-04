@@ -7,8 +7,8 @@ class SwisClient:
         self.NUM_ROBOTS = 1
         self.host = 'localhost'
         self.port = 3000
-        self.particlesBuffer = ["0,0,0,0,0","0,0,0,0,0","0,0,0,0,0"]
-        self.ids = [1,2,3]
+        self.particlesBuffer = ["0,0,0,0,0"]
+        self.ids = [1]
         self.initialized = False
 #        print self.particlesBuffer[0]
     def readData(self):
@@ -69,6 +69,7 @@ class SwisClient:
 #        print particles
 #        particles = ["0,0,70,70,3.142"] # For testing
             headings = []
+            sortedHeadings = []
             idents = []
             ident = 0
             print "headings"
@@ -126,6 +127,7 @@ class SwisClient:
         #print particles
         #particles = ["0,0,70,70,3.142"]
             distances = []
+            sortedDistances = []
             print "distances"
             for j in xrange(0, self.NUM_ROBOTS):
             #print j
