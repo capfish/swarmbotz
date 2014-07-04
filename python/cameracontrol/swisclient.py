@@ -4,7 +4,7 @@ import math
 class SwisClient:
     
     def __init__(self):
-        self.NUM_ROBOTS = 3
+        self.NUM_ROBOTS = 1
         self.host = 'localhost'
         self.port = 3000
         self.particlesBuffer = ["0,0,0,0,0","0,0,0,0,0","0,0,0,0,0"]

@@ -14,7 +14,7 @@ class swarm:
 
     def __init__(self):
         #self.ser = serial.Serial("/dev/ttyUSB0", 9600)
-        self.port = 5000
+        self.port = 5027
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.swis = swisclient.SwisClient()
         self.NUM_ROBOTS = self.swis.NUM_ROBOTS

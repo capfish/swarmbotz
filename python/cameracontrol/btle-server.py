@@ -187,7 +187,7 @@ def main():
         print 'serial connection closed'
         sys.exit()
 
-    except (KeyboardInterrupt, ValueError):
+    except (KeyboardInterrupt, ValueError, socket.error):
         print 'closing connections',connections
         run_event.clear()
         for c in connections:
