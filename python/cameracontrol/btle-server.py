@@ -157,16 +157,19 @@ def main():
     try:
         while 1:
             data = conn.recv(1024)
+            #print 'rcvd data', data
             if not data: break
             strRGB = data
             cmd = [int(s) for s in strRGB.split(',')]
-            print cmd
+            #print cmd
 
             botnum = cmd[0]
             botcmd = cmd[1:4]
             rgbcmd = [0,0,0]
             botcmd = rgbcmd + botcmd
+            print 'botcmd', botcmd
             queues[botnum].put(botcmd)
+            #queues[0].put([255,0,0,100,100])
 
             #cmdRed = cmd[0:3]
             #cmdGreen = cmd[3:6]
@@ -174,6 +177,7 @@ def main():
             #queues[0].put(cmdRed)
             #queues[1].put(cmdGreen)
             #queues[2].put(cmdBlue)
+            
         conn.close()
         print 'closing connections',connections
         run_event.clear()
@@ -187,7 +191,8 @@ def main():
         print 'serial connection closed'
         sys.exit()
 
-    except (KeyboardInterrupt, ValueError, socket.error):
+    except (KeyboardInterrupt, ValueError, socket.error) as inst:
+        print type(inst)
         print 'closing connections',connections
         run_event.clear()
         for c in connections:
