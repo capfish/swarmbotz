@@ -16,20 +16,21 @@ class SwisClient:
 #            print 'New Frame'
             sock = socket.socket()
             sock.connect((self.host,self.port))
-            data = sock.recv(1024)
+            #data = sock.recv(1024)
 #            print data
             particles = []
             dataPacket = True
             while dataPacket:
                 data = sock.recv(1024)
+                print data
                 if 'PARTICLE' in data and not 'FRAMENUMBER' in data:
                     particles.append(data)
 #                    print data
                 if 'STEP_STOP' in data:
                     dataPacket = False
             sock.close()
-            for p in particles:
-                result = p.split(',')
+#            for p in particles:
+#                result = p.split(',')
 #                print 'Particle ID = ', result[1], ', X = ', result[2], ', Y = ', result[3], ', theta = ', result[4]
 #            print particles
             return particles

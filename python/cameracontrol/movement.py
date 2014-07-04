@@ -83,7 +83,7 @@ class swarm:
                 if abs(heading - lastHeading) < DMax:
                     output += D * (heading - lastHeading)
 #                    print "D control"
-            forward = 1.0
+            forward = .2
 #            print "output ", output
             # Rotate whichever is smallest, the output value
             # or the maximum allowable rotation value
