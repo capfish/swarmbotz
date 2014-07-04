@@ -57,7 +57,7 @@ class swarm:
         DMax = 0.6
         rotationMax = 0.4
         motorMax = 2
-        triggerDistance = 5
+        triggerDistance = 50
         distances, headings = self.swis.generateHeadings(self.waypoints) # Current headings
         if distances == None and headings == None:
             return
@@ -99,10 +99,12 @@ class swarm:
             # If the robot is close enough to a waypoint, iterate to the
             # next waypoint for that robot
             distance = distances[i][1]
+            print distance
             if distance < triggerDistance:
+                print "Trigger"
                 # TODO add code to move to next waypoint
-                leftVelocity = 0.0
-                rightVelocity = 0.0
+                leftVelocity = 90
+                rightVelocity = 90
 
   #          message = message + str(i) + "," + str(leftVelocity) + "," + str(rightVelocity) + ":"
 
