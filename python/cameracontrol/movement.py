@@ -61,7 +61,7 @@ class swarm:
         DMax = 0.6
         rotationMax = 0.4
         motorMax = 2
-        triggerDistance = 50
+        triggerDistance = 10
         j = 0
         
         #distances = self.swis.generateDistances(self.waypoints) # Current distances

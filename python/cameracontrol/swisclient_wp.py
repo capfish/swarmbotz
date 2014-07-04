@@ -21,12 +21,13 @@ class SwisClient:
             particles = []
             dataPacket = True
             while dataPacket:
-                data = sock.recv(1024).replace('\n', '')
-                print data
-                print "recieved data"
-                if 'PARTICLE' in data and not 'FRAMENUMBER' in data:
+                data = sock.recv(1024).replace('\r\n', '')
+                #print 'rcvd: ', data
+                if 'PARTICLE' in data: 
+                    dumbhack = 'PARTICLE,'
+                    data = dumbhack + data.split('PARTICLE,')[1]
+                    #print 'appended data: ', data
                     particles.append(data)
-#                    print data
                 if 'STEP_STOP' in data:
                     dataPacket = False
             sock.close()
