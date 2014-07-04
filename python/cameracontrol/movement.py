@@ -8,13 +8,13 @@ def translate(value, leftMin, leftMax, rightMin, rightMax):
     # Convert the left range into a 0-1 range (float)
     valueScaled = float(value - leftMin) / float(leftSpan)
     # Convert the 0-1 range into a value in the right range.
-    return rightMin + (valueScaled * rightSpan)
+    return int(rightMin + (valueScaled * rightSpan))
 
 class swarm:    
 
     def __init__(self):
         #self.ser = serial.Serial("/dev/ttyUSB0", 9600)
-        self.port = 5000
+        self.port = 5027
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.swis = swisclient.SwisClient()
         self.NUM_ROBOTS = self.swis.NUM_ROBOTS
@@ -86,10 +86,11 @@ class swarm:
 #            print "rotate ", rotate
             # Move the wheels at whichever speed is smallest, the output
             # value or the maximum allowable speed.
-            leftVelocity = int(max(min((forward - rotate), motorMax), -1*motorMax))
-            rightVelocity = int(max(min((forward + rotate), motorMax), -1*motorMax))
+            leftVelocity = max(min((forward - rotate), motorMax), -1*motorMax)
+            rightVelocity = max(min((forward + rotate), motorMax), -1*motorMax)
 
             #Alright! Now convert to 0 to 180 instead of -motorMax to +motorMax
+            print 'before mapping to servo vals', leftVelocity, rightVelocity
             leftVelocity = translate(leftVelocity, -1*motorMax, motorMax, 0, 180)
             rightVelocity = translate(rightVelocity, -1*motorMax, motorMax, 0, 180)
 
@@ -109,6 +110,7 @@ class swarm:
   #          message = message + str(i) + "," + str(leftVelocity) + "," + str(rightVelocity) + ":"
 
             message = "0," + str(leftVelocity) + "," + str(rightVelocity)
+            print message
             self.sock.sendall(message)
 
         self.lastHeadings = headings
@@ -120,7 +122,9 @@ class swarm:
     # Uses pySerial to send left and right wheel velocity
     # commands to a given robot.
     def setVelocity(self, left, right, robot):
-        pass
+        message = '0, 90, 90'
+        print message
+        self.sock.sendall(message)
     
 def main():
 #        s = swarm()
