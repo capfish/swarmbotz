@@ -106,7 +106,7 @@ class swarm:
 
   #          message = message + str(i) + "," + str(leftVelocity) + "," + str(rightVelocity) + ":"
 
-            message = str(leftVelocity) + "," + str(rightVelocity)
+            message = "0," + str(leftVelocity) + "," + str(rightVelocity)
             self.sock.sendall(message)
 
         self.lastHeadings = headings
