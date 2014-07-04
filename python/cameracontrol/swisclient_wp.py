@@ -21,8 +21,9 @@ class SwisClient:
             particles = []
             dataPacket = True
             while dataPacket:
-                data = sock.recv(1024)
+                data = sock.recv(1024).replace('\n', '')
                 print data
+                print "recieved data"
                 if 'PARTICLE' in data and not 'FRAMENUMBER' in data:
                     particles.append(data)
 #                    print data
