@@ -38,7 +38,7 @@ class SwisClient:
     # Generates a list of headings for each robot to their given waypoint
     def generateHeadings(self, waypoints):
         numBotsInitialized = 0
-        points = waypoints
+        points = waypoints.split(" : ")
         rawParticles = self.readData()
         particles = sorted(rawParticles, key=lambda idsort: idsort[1])
 #        print 'length', len(particles)
@@ -77,7 +77,7 @@ class SwisClient:
 #            print i
            # print particles
            # print points
-                w = points
+                w = points[i].split(",")
                 pastP = self.particlesBuffer[i].split(",")
                 if len(particles) > i:                
                     p = particles[i].split(",")
@@ -131,7 +131,7 @@ class SwisClient:
             print "distances"
             for j in xrange(0, self.NUM_ROBOTS):
             #print j
-                w = points
+                w = points[j].split(",")
                 pastP = self.particlesBuffer[j].split(",")
                 if len(particles) > j:
                     p = particles[j].split(",")
