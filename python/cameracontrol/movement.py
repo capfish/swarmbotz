@@ -92,13 +92,13 @@ class swarm:
 
   #          message = message + str(i) + "," + str(leftVelocity) + "," + str(rightVelocity) + ":"
 
-            message = message + str(leftVelocity) + "," + str(rightVelocity) + ":X"
+            message = str(leftVelocity) + "," + str(rightVelocity)
+            self.sock.sendall(message)
 
         self.lastHeadings = headings
         print message
         print ""
         #self.ser.write(message)
-        sock.sendall(message)
         time.sleep(0.05)
 
     # Uses pySerial to send left and right wheel velocity
