@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<swistrack>
+  <components>
+    <component type="InputCameraUSB">
+      <enabledinterval value="1"/>
+      <parameter name="CameraNumber" value="1"/>
+    </component>
+    <component type="ConvertToColor">
+      <enabledinterval value="1"/>
+    </component>
+    <component type="ColorBlur">
+      <enabledinterval value="1"/>
+      <parameter name="Mode" value="gaussian"/>
+      <parameter name="Radius" value="7"/>
+    </component>
+    <component type="DoubleThresholdColorIndependent">
+      <enabledinterval value="1"/>
+      <parameter name="BlueHighThreshold" value="133"/>
+      <parameter name="GreenHighThreshold" value="125"/>
+      <parameter name="RedLowThreshold" value="157"/>
+    </component>
+    <component type="BlobDetectionMinMax">
+      <enabledinterval value="1"/>
+      <parameter name="AreaBool" value="true"/>
+      <parameter name="MaxArea" value="1000"/>
+      <parameter name="MinArea" value="200"/>
+    </component>
+    <component type="DynamicNearestNeighborTracking">
+      <enabledinterval value="1"/>
+      <parameter name="FrameKillThreshold" value="50.000000"/>
+      <parameter name="MinNewTrackDistance" value="0.000000"/>
+      <parameter name="TrackDistanceKillThreshold" value="14"/>
+    </component>
+    <component type="KalmanFilterTrack">
+      <enabledinterval value="1"/>
+    </component>
+    <component type="TrackSmoothing">
+      <enabledinterval value="1"/>
+    </component>
+    <component type="OutputParticles">
+      <enabledinterval value="1"/>
+    </component>
+  </components>
+  <server>
+    <port>3000</port>
+  </server>
+</swistrack>
