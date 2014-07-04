@@ -164,6 +164,8 @@ def main():
 
             botnum = cmd[0]
             botcmd = cmd[1:4]
+            rgbcmd = [0,0,0]
+            botcmd = rgbcmd + botcmd
             queues[botnum].put(botcmd)
 
             #cmdRed = cmd[0:3]
