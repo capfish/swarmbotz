@@ -1,10 +1,12 @@
 import swisclient
-import time, sys, serial
+import time, sys, serial, socket
 
 class swarm:    
 
     def __init__(self):
-        self.ser = serial.Serial("/dev/ttyUSB0", 9600)
+        #self.ser = serial.Serial("/dev/ttyUSB0", 9600)
+        self.port = 5000
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.swis = swisclient.SwisClient()
         self.NUM_ROBOTS = self.swis.NUM_ROBOTS
         self.lastHeadings = None # Differential control keeps track of past steps
@@ -13,21 +15,28 @@ class swarm:
         
         # Initialize serial port components
         time.sleep(2)
-        self.ser.setDTR()
-        self.ser.flushInput()
-        self.ser.flushOutput()
+        #self.ser.setDTR()
+        #self.ser.flushInput()
+        #self.ser.flushOutput()
+        
+        self.sock.connect(('127.0.0.1',self.port))
+
         print "__INIT__"
     # Close the serial connection
     def closeSerial(self):
         time.sleep(1)
-        self.ser.close()
+    #    self.ser.close()
 
     def write(string):
+        pass
+
+    def closeSocket():
+        self.sock.close()
     #for key in string:                                                                    
         #if (ord(key) == 13):                                                              
             #key = chr(10)                                                                 
     #ser.write(key)                                                                        
-        self.ser.write(string)
+     #   self.ser.write(string)
 
 
     # Uses a PD loop to generate velocity for each robot,
@@ -88,7 +97,8 @@ class swarm:
         self.lastHeadings = headings
         print message
         print ""
-        self.ser.write(message)
+        #self.ser.write(message)
+        sock.sendall(message)
         time.sleep(0.05)
 
     # Uses pySerial to send left and right wheel velocity
@@ -106,7 +116,8 @@ def main():
                 print "Exiting program, stopping robots"
                 for i in range (0, bots):
                     s.setVelocity(0,0,i)
-                s.closeSerial()
+                #s.closeSerial()
+                s.closeSocket()
                 sys.exit()
 
 if __name__ == '__main__':
