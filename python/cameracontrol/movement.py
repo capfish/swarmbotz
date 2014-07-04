@@ -1,6 +1,15 @@
 import swisclient
 import time, sys, serial, socket
 
+def translate(value, leftMin, leftMax, rightMin, rightMax):
+    # Figure out how 'wide' each range is
+    leftSpan = leftMax - leftMin
+    rightSpan = rightMax - rightMin
+    # Convert the left range into a 0-1 range (float)
+    valueScaled = float(value - leftMin) / float(leftSpan)
+    # Convert the 0-1 range into a value in the right range.
+    return rightMin + (valueScaled * rightSpan)
+
 class swarm:    
 
     def __init__(self):
@@ -77,8 +86,13 @@ class swarm:
 #            print "rotate ", rotate
             # Move the wheels at whichever speed is smallest, the output
             # value or the maximum allowable speed.
-            leftVelocity = int(100*max(min((forward - rotate), motorMax), -1*motorMax))
-            rightVelocity = int( 100*max(min((forward + rotate), motorMax), -1*motorMax))
+            leftVelocity = int(max(min((forward - rotate), motorMax), -1*motorMax))
+            rightVelocity = int(max(min((forward + rotate), motorMax), -1*motorMax))
+
+            #Alright! Now convert to 0 to 180 instead of -motorMax to +motorMax
+            leftVelocity = translate(leftVelocity, -1*motorMax, motorMax, 0, 180)
+            rightVelocity = translate(rightVelocity, -1*motorMax, motorMax, 0, 180)
+
 
             #setVelocity(leftVelocity, rightVelocity, i)
             
