@@ -9,25 +9,31 @@ def closeall(connection):
 def gatheradr(conn):
     print 'Scanning for addresses...'
     start_time = time.time()
+    elapsed_time = 0
     ble_adrs = set()
-    for line in conn:
-        address = line.strip().split(' ')[0]
-        if address != '':
-            ble_adrs.add(address)
+    try: 
+        for line in conn:
+            address = line.strip().split(' ')[0]
+            if address != '':
+                ble_adrs.add(address)
+    except (pexpect.TIMEOUT):
+        print '!!!!!! spawn timeout'
+        pass
 
-        elapsed_time = time.time() - start_time
-        #print 'elapsed timed: ', elapsed_time
-        if elapsed_time > 1: #in seconds
-            #print ble_adrs
-            print 'timeout!'
-            closeall(conn)
-            return ble_adrs
+    #print ble_adrs
+    print 'timeout!'
+    closeall(conn)
+    return ble_adrs
 
 def blescan():
-    hciout = pexpect.spawn('hcitool lescan')
-    i = hciout.expect(['LE Scan ...','File descriptor in bad state',pexpect.TIMEOUT], timeout=1)
     ble_adrs = set()
     ble_adrs.add('test')
+    try:
+        hciout = pexpect.spawn('hcitool lescan', timeout=1)
+        print 'spawning!'
+    except (pexpect.TIMEOUT):
+        print '!!! uhm spwan timeout'
+    i = hciout.expect(['LE Scan ...','File descriptor in bad state',pexpect.TIMEOUT], timeout=1)
     if i == 0:
         ble_adrs = gatheradr(hciout)
     if i == 1:
@@ -61,7 +67,10 @@ def blescan():
         
 if __name__ == "__main__":
     ble_adrs = blescan()
-    print ble_adrs
+    if ble_adrs:
+        print ble_adrs
+    else:
+        print 'No addresses found'
     
 
 
