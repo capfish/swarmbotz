@@ -5,7 +5,6 @@ def closeall(connection):
     print 'process was killed: ', isalive
     #hciout.kill(signal.SIGTERM)
     connection.close(force = True)
-    sys.exit(0)
 
 def gatheradr(conn):
     print 'Scanning for addresses...'
@@ -19,7 +18,7 @@ def gatheradr(conn):
         elapsed_time = time.time() - start_time
         #print 'elapsed timed: ', elapsed_time
         if elapsed_time > 1: #in seconds
-            print ble_adrs
+            #print ble_adrs
             print 'timeout!'
             closeall(conn)
             return ble_adrs
@@ -27,8 +26,10 @@ def gatheradr(conn):
 def blescan():
     hciout = pexpect.spawn('hcitool lescan')
     i = hciout.expect(['LE Scan ...','File descriptor in bad state',pexpect.TIMEOUT], timeout=1)
+    ble_adrs = set()
+    ble_adrs.add('test')
     if i == 0:
-        gatheradr(hciout)
+        ble_adrs = gatheradr(hciout)
     if i == 1:
         c = True
         while c: #code to check if input acceptable
@@ -42,7 +43,7 @@ def blescan():
                 hciout = pexpect.spawn('hcitool lescan')
                 j = hciout.expect(['LE Scan ...',pexpect.TIMEOUT], timeout=1)
                 if j == 0:
-                    gatheradr(hciout)
+                    ble_adrs = gatheradr(hciout)
                 if j == 1:
                     'Dongle not plugged in.'
                     closeall(hciout)
@@ -55,9 +56,13 @@ def blescan():
     if i == 2:
         print 'Could not scan: ', hciout.after
         closeall(hciout)
+    return ble_adrs
+
         
 if __name__ == "__main__":
-    blescan()
+    ble_adrs = blescan()
+    print ble_adrs
+    
 
 
 
