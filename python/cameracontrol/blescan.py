@@ -2,6 +2,8 @@
 July 5, 2014 Nancy Ouyang
 Usage:
     $ sudo python blescan.py
+Copyright:
+    public domain
 Automation of hcitool lescan to return MAC addresses
 Requires sudo privileges
 This operates with hcitool v5.20, tested on Ubuntu 14.04
