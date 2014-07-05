@@ -1,7 +1,6 @@
 import os, sys
 from ctypes.util import find_library
 import pexpect, traceback, threading, Queue, time, socket
-import constants
 
 print 'this is a test'
 
