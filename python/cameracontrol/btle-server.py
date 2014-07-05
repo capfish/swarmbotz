@@ -3,15 +3,11 @@
 # with help from https://github.com/msaunby/ble-sensor-pi/blob/master/sensortag/sensortag.py
 # Michael Saunby. April 2013
 
-import os
-import sys
+import os, sys
 from ctypes.util import find_library
-import pexpect
-import traceback
-import threading
-import Queue
-import time
-import socket
+import pexpect, traceback, threading, Queue, time, socket
+import constants
+
 
 if not os.geteuid() == 0:
     sys.exit("script only works as root")
@@ -86,7 +82,9 @@ class bleBot:
             self.con.sendline('disconnect')
             print self.ble_adr, ': disconnected'
             self.con.sendline('exit')
-            self.con.close(force = True)
+            isalive = self.con.terminate(force=True)
+            print self.ble_adr, ': has been terminated? ', isalive
+            self.con.close(force=True)
             #print self.ble_adr, 'is alive: ', self.con.isalive()
         except OSError:
             print self.ble_adr, ': OSError'
@@ -119,7 +117,7 @@ def main():
     if len(sys.argv) > 2:
         #ports_init(int(sys.argv[1]))
         HOST = ''                 # Symbolic name meaning all available interfaces
-        PORT = int(sys.argv[1])   # Arbitrary non-privileged port
+        PORT = constants.PORT_BTLE # Arbitrary non-privileged port
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((HOST, PORT))
         s.listen(1)

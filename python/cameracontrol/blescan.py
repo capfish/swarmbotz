@@ -14,8 +14,20 @@ Note: You can check if your dongle is recognized by using hciconfig at a termina
 @returns ble_adrs - A set of MAC addresses of BLE peripherals
 '''
 
-import pexpect, time, sys, signal
+import pexpect, time, sys, signal, os
+from ctypes.util import find_library
 SCAN_TIME = 1 #in seconds
+
+
+if not os.geteuid() == 0:
+    sys.exit("script only works as root")
+
+btlib = find_library("bluetooth")
+if not btlib:
+    raise Exception(
+        "Can't find required bluetooth libraries"
+    )
+
 
 def closeall(connection):
     isalive = connection.terminate(force=True)

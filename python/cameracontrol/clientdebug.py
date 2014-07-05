@@ -1,16 +1,18 @@
 import swisclient_wp as swisclient
 import time, sys, serial, socket
+import constants
 
 class swarm:    
 
     def __init__(self):
         #self.ser = serial.Serial("/dev/ttyUSB0", 9600)
-        self.port = 5027
+        self.host = constants.HOST_BTLE
+        self.port = constants.PORT_BTLE 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.swis = swisclient.SwisClient()
-        self.NUM_ROBOTS = self.swis.NUM_ROBOTS
+        self.NUM_ROBOTS = constants.NUM_ROBOTS
         
-        self.sock.connect(('127.0.0.1',self.port))
+        self.sock.connect((self.host,self.port))
 
         print "__INIT__"
     # Close the serial connection
@@ -18,10 +20,10 @@ class swarm:
         time.sleep(1)
     #    self.ser.close()
 
-    def write(string):
+    def write(self, string):
         pass
 
-    def closeSocket():
+    def closeSocket(self):
         self.sock.close()
 
 
@@ -38,37 +40,25 @@ class swarm:
             print message
             self.sock.sendall(message)
 
-        self.lastHeadings = headings
-        print message
-            print message
-            self.sock.sendall(message)
-
-        self.lastHeadings = headings
-        print message
-        print ""
-        #self.ser.write(message)
-        time.sleep(0.05)
-
-    # Uses pySerial to send left and right wheel velocity
-    # commands to a given robot.
     def setVelocity(self, left, right, robot):
-        message = '0, 90, 90'
+        message = '0, ', left, right
         print message
         self.sock.sendall(message)
     
 def main():
 #        s = swarm()
 #        bots = s.NUM_ROBOTS
-        while 1:
-            try:
-                s.step()
-            except (KeyboardInterrupt):
-                print "Exiting program, stopping robots"
-                for i in range (0, bots):
-                    s.setVelocity(0,0,i)
-                #s.closeSerial()
-                s.closeSocket()
-                sys.exit()
+    PORT = int(sys.argv[1])
+    while 1:
+        try:
+            s.step()
+        except (KeyboardInterrupt):
+            print "Exiting program, stopping robots"
+            for i in range (0, bots):
+                s.setVelocity(0,90,90)
+            #s.closeSerial()
+            s.closeSocket()
+            sys.exit()
 
 if __name__ == '__main__':
     s = swarm()
