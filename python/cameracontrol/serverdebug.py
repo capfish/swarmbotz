@@ -7,18 +7,18 @@ print 'this is a test'
 
 
 #def worker( address, commands ):
-def worker( cmdQueue, i,  stop_event ):
-    while not stop_event.is_set():
-        print 'stop_event not set'
-        cmd = cmdQueue.get()
-    print i,'attempting to clean up'
-
-
+def worker( cmdQueue, i, ):
+    cmd = cmdQueue.get()
+    while True:
+        if cmd is None:
+            print i,'attempting to clean up'
+            return
+        else:
+            print cmd
+            print i, 'is still running' 
 
 def main():
     print 'Server running, ready to accept commands to pass over BTLE to peripherals.'
-    stop_event = threading.Event()
-    stop_event.clear()
 
     queues = []
 
@@ -29,7 +29,7 @@ def main():
 
         cmdQueue = queues[i]
         #t = threading.Thread(target=worker, args=(connection, cmdList))
-        t = threading.Thread(target=worker, args=(cmdQueue, i, stop_event))
+        t = threading.Thread(target=worker, args=(cmdQueue, i, ))
         t.daemon = True 
         threads.append(t)
     
@@ -39,9 +39,6 @@ def main():
     try:
         while 1:
             print 'running'
-            queues[0].put('1')
-            queues[1].put('1')
-        stop_event.set()
         print 'closing normally'
         for t in threads:
             t.join(1) #timeout required so that main thread also receives KeyboardInterrupt
@@ -52,11 +49,12 @@ def main():
     except (KeyboardInterrupt, ValueError, socket.error) as inst:
         print type(inst)
         print 'closing due to error'
-        #print threads
-        stop_event.set()
-        print 'is stop set?', stop_event.is_set()
+        print queues
+        print threads
+        for q in queues:
+            q.put(None)
         for t in threads:
-            t.join(1) #timeout required so that main thread also receives KeyboardInterrupt
+            t.join() #timeout required so that main thread also receives KeyboardInterrupt
         print 'threads closed'
         print 'serial connection closed'
         sys.exit()
