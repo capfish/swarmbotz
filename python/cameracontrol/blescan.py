@@ -1,4 +1,19 @@
+'''
+July 5, 2014 Nancy Ouyang
+Usage:
+    $ sudo python blescan.py
+Automation of hcitool lescan to return MAC addresses
+Requires sudo privileges
+This operates with hcitool v5.20, tested on Ubuntu 14.04
+Hardware: Requires a laptop with 4.0 dongle or with built-in bluetooth low energy capabilities
+Note: You can check if your dongle is recognized by using hciconfig at a terminal prompt. 
+
+@params None
+@returns ble_adrs - A set of MAC addresses of BLE peripherals
+'''
+
 import pexpect, time, sys, signal
+SCAN_TIME = 1 #in seconds
 
 def closeall(connection):
     isalive = connection.terminate(force=True)
@@ -17,7 +32,7 @@ def gatheradr(conn):
             if address != '':
                 ble_adrs.add(address)
             elapsed_time = time.time() - start_time
-            if elapsed_time > 1: #in seconds
+            if elapsed_time > SCAN_TIME: #in seconds
                 closeall(conn)
                 break
     except (pexpect.TIMEOUT):
@@ -28,6 +43,7 @@ def gatheradr(conn):
 def blescan():
     ble_adrs = set()
     # seems like we cannot catch the timeout here, must be inside gatheradr? 
+    # pexpect.timeout thrown if no inputs, aka no addresses, are being found with hcitool lescan
     hciout = pexpect.spawn('hcitool lescan', timeout=1)
     i = hciout.expect(['LE Scan ...','File descriptor in bad state',pexpect.TIMEOUT], timeout=1)
     if i == 0:
