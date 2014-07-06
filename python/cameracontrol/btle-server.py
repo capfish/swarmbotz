@@ -110,11 +110,12 @@ def tupToHex( foolist ):
 #def worker( address, commands ):
 def worker( cmdQueue, connection):
     cmd = cmdQueue.get()
+    print connection.ble_adr, 'rcvd from queue:', cmd
     while True:
         if cmd is None:
             print connection.ble_adr, ': attempting to cleanup'
             connection.cleanup()
-            return
+            return 
         else:
             connection.char_write_cmd(tupToHex(cmd))
 
@@ -123,15 +124,6 @@ def worker( cmdQueue, connection):
 
 def main():
     print 'Server running, ready to accept commands to pass over BTLE to peripherals.'
-
-    #ports_init(int(sys.argv[1]))
-    HOST = ''                 # Symbolic name meaning all available interfaces
-    PORT = constants.PORT_BTLE # Arbitrary non-privileged port
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((HOST, PORT))
-    s.listen(1)
-    conn, addr = s.accept()
-    print 'Connected by', addr
 
     connections = []
 
@@ -171,6 +163,16 @@ def main():
     for t in threads:
         t.start()
 
+    #ports_init(int(sys.argv[1]))
+    HOST = ''                 # Symbolic name meaning all available interfaces
+    PORT = constants.PORT_BTLE # Arbitrary non-privileged port
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind((HOST, PORT))
+    s.listen(1)
+    conn, addr = s.accept()
+    print 'Connected by', addr
+
+
     try:
         while 1:
             data = conn.recv(1024)
@@ -188,8 +190,8 @@ def main():
             #print 'botcmd', botcmd
             #queues[botnum].put(botcmd)
             
-            queues[0].put([255,0,0,100,100])
-            queues[1].put([255,0,0,100,100])
+            queues[0].put([255,0,0,92,92])
+            queues[1].put([255,0,0,92,92])
 
             #cmdRed = cmd[0:3]
             #cmdGreen = cmd[3:6]
@@ -198,13 +200,17 @@ def main():
             #queues[1].put(cmdGreen)
             #queues[2].put(cmdBlue)
             
-        conn.close()
         print 'closing normally'
         print connections
-        for c in connections:
-            connection.cleanup()
+        while threads[0].is_alive():
+            print 'thread 0 still alive'
+            for q in queues:
+                print 'putting in Nones'
+                q.put(None)
+            queues[0].put(None)
+            queues[1].put(None)
         for t in threads:
-            t.join(1) #timeout required so that main thread also receives KeyboardInterrupt
+            t.join() #timeout required so that main thread also receives KeyboardInterrupt
         print 'threads closed'
         conn.shutdown(socket.SHUT_RDWR)
         conn.close()
@@ -214,8 +220,12 @@ def main():
     except (KeyboardInterrupt, ValueError, socket.error) as inst:
         print type(inst)
         print 'closing due to error'
-        for q in queues:
-            q.put(None)
+        print queues
+        while threads[0].is_alive():
+            print 'thread 0 still alive'
+            for q in queues:
+                print 'putting in Nones'
+                q.put(None)
         for t in threads:
             t.join() #timeout required so that main thread also receives KeyboardInterrupt
         print 'threads closed'

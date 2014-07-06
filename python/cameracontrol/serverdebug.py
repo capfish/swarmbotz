@@ -41,7 +41,7 @@ def main():
             print 'running'
         print 'closing normally'
         for t in threads:
-            t.join(1) #timeout required so that main thread also receives KeyboardInterrupt
+            t.join() #timeout required so that main thread also receives KeyboardInterrupt
         print 'threads closed'
         print 'serial connection closed'
         sys.exit()

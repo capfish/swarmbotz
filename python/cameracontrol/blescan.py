@@ -28,7 +28,6 @@ if not btlib:
         "Can't find required bluetooth libraries"
     )
 
-
 def closeall(connection):
     isalive = connection.terminate(force=True)
     #print 'process was killed: ', isalive

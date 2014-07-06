@@ -4,13 +4,13 @@ import constants
 
 class swarm:    
 
-    def __init__(self):
+    def __init__(self, numbots, port):
         #self.ser = serial.Serial("/dev/ttyUSB0", 9600)
         self.host = constants.HOST_BTLE
-        self.port = constants.PORT_BTLE 
+        self.port = port 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.swis = swisclient.SwisClient()
-        self.NUM_ROBOTS = constants.NUM_ROBOTS
+        self.NUM_ROBOTS = numbots 
         
         self.sock.connect((self.host,self.port))
 
@@ -46,13 +46,11 @@ class swarm:
         self.sock.send(message)
     
 def main():
-#        s = swarm()
-#        bots = s.NUM_ROBOTS
-    PORT = constants.PORT_BTLE
+    s = swarm(constants.NUM_ROBOTS, constants.PORT_BTLE)
     while 1:
         try:
             s.step()
-            time.sleep(0.02)
+            time.sleep(1)
         except (socket.error, KeyboardInterrupt):
             print "Exiting program, stopping robots"
             for i in range (0, constants.NUM_ROBOTS):
@@ -62,6 +60,4 @@ def main():
             sys.exit()
 
 if __name__ == '__main__':
-    s = swarm()
-    bots = s.NUM_ROBOTS
     main()
