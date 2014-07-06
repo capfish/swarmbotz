@@ -38,23 +38,24 @@ class swarm:
             #message = "0," + str(leftVelocity) + "," + str(rightVelocity)
             message = "0,90,90"
             print message
-            self.sock.sendall(message)
+            self.sock.send(message)
 
-    def setVelocity(self, left, right, robot):
-        message = '0, ', left, right
+    def setVelocity(self, robot, left, right):
+        message = '0, '+ str(left) + ', ' + str(right)
         print message
-        self.sock.sendall(message)
+        self.sock.send(message)
     
 def main():
 #        s = swarm()
 #        bots = s.NUM_ROBOTS
-    PORT = int(sys.argv[1])
+    PORT = constants.PORT_BTLE
     while 1:
         try:
             s.step()
-        except (KeyboardInterrupt):
+            time.sleep(0.02)
+        except (socket.error, KeyboardInterrupt):
             print "Exiting program, stopping robots"
-            for i in range (0, bots):
+            for i in range (0, constants.NUM_ROBOTS):
                 s.setVelocity(0,90,90)
             #s.closeSerial()
             s.closeSocket()

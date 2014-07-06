@@ -20,7 +20,7 @@ SCAN_TIME = 1 #in seconds
 
 
 if not os.geteuid() == 0:
-    sys.exit("script only works as root")
+    sys.exit("hictool lescan only works as root")
 
 btlib = find_library("bluetooth")
 if not btlib:

@@ -1,12 +1,13 @@
 import socket
 import math
+import constants
 
 class SwisClient:
     
     def __init__(self):
-        self.NUM_ROBOTS = 1
-        self.host = 'localhost'
-        self.port = 3000
+        self.NUM_ROBOTS = constants.NUM_ROBOTS
+        self.host = constants.HOST_SWISS
+        self.port = constants.PORT_SWISS 
         self.particlesBuffer = ["0,0,0,0,0"]
         self.ids = [1]
         self.initialized = False

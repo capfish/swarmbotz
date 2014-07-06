@@ -6,7 +6,7 @@
 import os, sys
 from ctypes.util import find_library
 import pexpect, traceback, threading, Queue, time, socket
-import constants
+import constants, blescan
 
 
 if not os.geteuid() == 0:
@@ -35,23 +35,31 @@ class bleBot:
         if i == 0:
             #print 'Attempting to connect'
             j = self.con.expect(['Connection successful', 'No route', 'busy', pexpect.TIMEOUT], timeout = 1)
-            print 'j: ', j
             if j == 0:
                 print self.ble_adr, ': connected!'
             if j == 1:
                 print self.ble_adr, ': No route to host, is USB dongle plugged in?'
                 self.cleanup()
             if j == 2:
-                print self.ble_adr, ': Device busy, is something else already connected to it? Try hitting reset. You have 3 seconds.'
-                time.sleep(3)
-                self.con.sendline('connect')
-                k = self.con.expect(['Connection successful', pexpect.TIMEOUT], timeout = 1)
-                print 'k: ', k
-                if k == 0:
-                    print self.ble_adr, ': connected!'
-                if k == 1:
-                    print self.ble_adr, ': Could not connect'
-                    self.cleanup()
+                print self.ble_adr, ': Device busy, is something else already connected to it?'
+                c = True
+                while c:
+                    inp = raw_input('Try hitting reset. Type "y" to continue or "n" to quit.')
+                    if inp.lower().startswith('y'):
+                        self.con.sendline('connect')
+                        k = self.con.expect(['Connection successful', pexpect.TIMEOUT], timeout = 1)
+                        print 'k: ', k
+                        if k == 0:
+                            print self.ble_adr, ': connected!'
+                        if k == 1:
+                            print self.ble_adr, ': Could not connect'
+                            self.cleanup()
+                        break
+                    elif inp.lower().startswith('n'):
+                        self.cleanup()
+                        break
+                    else:
+                        print 'Did not understand command. Try again.'
             if j == 3:
                 print 'Attempting to connect, is device on and in range? '
                 #foostr = raw_input('Type anything to continue, or enter to cancel')
@@ -80,7 +88,6 @@ class bleBot:
         print self.ble_adr, ': attempting to disconnect'
         try:
             self.con.sendline('disconnect')
-            print self.ble_adr, ': disconnected'
             self.con.sendline('exit')
             isalive = self.con.terminate(force=True)
             print self.ble_adr, ': has been terminated? ', isalive
@@ -101,34 +108,46 @@ def tupToHex( foolist ):
     return hexed
 
 #def worker( address, commands ):
-def worker( cmdQueue, connection, run_event ):
-    while run_event.is_set():
-        cmd = cmdQueue.get()
-        connection.char_write_cmd(tupToHex(cmd))
-    # when we catch a keyboard interrupt, make sure to close the bluetooth connection
+def worker( cmdQueue, connection):
+    cmd = cmdQueue.get()
+    while True:
+        if cmd is None:
+            print connection.ble_adr, ': attempting to cleanup'
+            connection.cleanup()
+            return
+        else:
+            connection.char_write_cmd(tupToHex(cmd))
 
 
 #def ports_init(portnum):
 
 def main():
-    run_event = threading.Event()
-    run_event.set()
+    print 'Server running, ready to accept commands to pass over BTLE to peripherals.'
 
-    if len(sys.argv) > 2:
-        #ports_init(int(sys.argv[1]))
-        HOST = ''                 # Symbolic name meaning all available interfaces
-        PORT = constants.PORT_BTLE # Arbitrary non-privileged port
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind((HOST, PORT))
-        s.listen(1)
-        conn, addr = s.accept()
-        print 'Connected by', addr
-        addresses = sys.argv[2:]
-    else:
-        sys.exit("Usage: sudo python btle-server.py $PORTNUM $BLUETOOTH_ADDRESS1 $BTLE_ADR2")
-
+    #ports_init(int(sys.argv[1]))
+    HOST = ''                 # Symbolic name meaning all available interfaces
+    PORT = constants.PORT_BTLE # Arbitrary non-privileged port
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind((HOST, PORT))
+    s.listen(1)
+    conn, addr = s.accept()
+    print 'Connected by', addr
 
     connections = []
+
+    addresses = blescan.blescan()
+    while len(addresses) != constants.NUM_ROBOTS:
+        c = True
+        while c:
+            inp = raw_input('Expected ' + str(constants.NUM_ROBOTS) + ', found ' + str(len(addresses)) + ' robots. Try hitting reset on the robots. Type "y" to continue or "n" to quit.')
+            if inp.lower().startswith('y'):
+                addresses = blescan.blescan()
+                break
+            elif inp.lower().startswith('n'):
+                sys.exit('User cancelled program when told not enough robots found.')
+                break
+            else:
+                print 'Did not understand command. Try again.'
     for address in addresses:
         b = bleBot(address)
     # first connect them all because that takes the longest
@@ -145,7 +164,7 @@ def main():
         cmdQueue = queues[i]
         connection = connections[i]
         #t = threading.Thread(target=worker, args=(connection, cmdList))
-        t = threading.Thread(target=worker, args=(cmdQueue, connection, run_event))
+        t = threading.Thread(target=worker, args=(cmdQueue, connection))
         t.daemon = True 
         threads.append(t)
     
@@ -157,17 +176,20 @@ def main():
             data = conn.recv(1024)
             #print 'rcvd data', data
             if not data: break
+            print 'rcved data', data
             strRGB = data
             cmd = [int(s) for s in strRGB.split(',')]
             #print cmd
 
-            botnum = cmd[0]
-            botcmd = cmd[1:4]
-            rgbcmd = [0,0,0]
-            botcmd = rgbcmd + botcmd
-            print 'botcmd', botcmd
-            queues[botnum].put(botcmd)
-            #queues[0].put([255,0,0,100,100])
+            #botnum = cmd[0]
+            #botcmd = cmd[1:4]
+            #rgbcmd = [0,0,0]
+            #botcmd = rgbcmd + botcmd
+            #print 'botcmd', botcmd
+            #queues[botnum].put(botcmd)
+            
+            queues[0].put([255,0,0,100,100])
+            queues[1].put([255,0,0,100,100])
 
             #cmdRed = cmd[0:3]
             #cmdGreen = cmd[3:6]
@@ -177,8 +199,8 @@ def main():
             #queues[2].put(cmdBlue)
             
         conn.close()
-        print 'closing connections',connections
-        run_event.clear()
+        print 'closing normally'
+        print connections
         for c in connections:
             connection.cleanup()
         for t in threads:
@@ -191,12 +213,11 @@ def main():
 
     except (KeyboardInterrupt, ValueError, socket.error) as inst:
         print type(inst)
-        print 'closing connections',connections
-        run_event.clear()
-        for c in connections:
-            connection.cleanup()
+        print 'closing due to error'
+        for q in queues:
+            q.put(None)
         for t in threads:
-            t.join(1) #timeout required so that main thread also receives KeyboardInterrupt
+            t.join() #timeout required so that main thread also receives KeyboardInterrupt
         print 'threads closed'
         conn.shutdown(socket.SHUT_RDWR)
         conn.close()
