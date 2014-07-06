@@ -58,6 +58,8 @@ var/
 pip-log.txt
 pip-delete-this-directory.txt
 
+#audio samples
+*.mp3
 # Unit test / coverage reports
 htmlcov/
 .tox/

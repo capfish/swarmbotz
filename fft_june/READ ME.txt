@@ -1,0 +1,4 @@
+FFT_test is done through Processing (https://www.processing.org/)
+
+The example code was taken from Minim code compartment (http://code.compartmental.net/minim/fft_method_getband.html)
+General library for Minim (http://code.compartmental.net/minim/)
