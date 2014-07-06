@@ -109,9 +109,9 @@ def tupToHex( foolist ):
 
 #def worker( address, commands ):
 def worker( cmdQueue, connection):
-    cmd = cmdQueue.get()
-    print connection.ble_adr, 'rcvd from queue:', cmd
     while True:
+        cmd = cmdQueue.get()
+        #print connection.ble_adr, 'rcvd from queue:', cmd
         if cmd is None:
             print connection.ble_adr, ': attempting to cleanup'
             connection.cleanup()
@@ -170,7 +170,7 @@ def main():
     s.bind((HOST, PORT))
     s.listen(1)
     conn, addr = s.accept()
-    print 'Connected by', addr
+    print 'port: ', PORT, '|| Connected by', addr
 
 
     try:
@@ -178,9 +178,15 @@ def main():
             data = conn.recv(1024)
             #print 'rcvd data', data
             if not data: break
-            print 'rcved data', data
+            print 'received data', data
             strRGB = data
             cmd = [int(s) for s in strRGB.split(',')]
+            if len(cmd) == constants.LENGTH_CMD:
+                botID = cmd[0]
+                queues[botID].put(cmd[1:])
+            else:
+                print 'invalid command received: ', cmd
+
             #print cmd
 
             #botnum = cmd[0]
@@ -190,8 +196,8 @@ def main():
             #print 'botcmd', botcmd
             #queues[botnum].put(botcmd)
             
-            queues[0].put([255,0,0,92,92])
-            queues[1].put([255,0,0,92,92])
+            #queues[0].put([255,0,0,92,92])
+            #queues[1].put([255,0,0,92,92])
 
             #cmdRed = cmd[0:3]
             #cmdGreen = cmd[3:6]
@@ -201,14 +207,10 @@ def main():
             #queues[2].put(cmdBlue)
             
         print 'closing normally'
-        print connections
-        while threads[0].is_alive():
-            print 'thread 0 still alive'
-            for q in queues:
-                print 'putting in Nones'
-                q.put(None)
-            queues[0].put(None)
-            queues[1].put(None)
+        print 'number of connections: ', len(connections)
+        for q in queues:
+            q.put(constants.KILL_CMD)
+            q.put(None)
         for t in threads:
             t.join() #timeout required so that main thread also receives KeyboardInterrupt
         print 'threads closed'
@@ -220,12 +222,9 @@ def main():
     except (KeyboardInterrupt, ValueError, socket.error) as inst:
         print type(inst)
         print 'closing due to error'
-        print queues
-        while threads[0].is_alive():
-            print 'thread 0 still alive'
-            for q in queues:
-                print 'putting in Nones'
-                q.put(None)
+        for q in queues:
+            q.put(constants.KILL_CMD)
+            q.put(None)
         for t in threads:
             t.join() #timeout required so that main thread also receives KeyboardInterrupt
         print 'threads closed'
@@ -240,4 +239,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-# help from: http://stackoverflow.com/questions/11436502/closing-all-threads-with-a-keyboard-interrupt

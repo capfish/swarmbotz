@@ -50,7 +50,7 @@ def main():
     while 1:
         try:
             s.step()
-            time.sleep(1)
+            time.sleep(0.02)
         except (socket.error, KeyboardInterrupt):
             print "Exiting program, stopping robots"
             for i in range (0, constants.NUM_ROBOTS):

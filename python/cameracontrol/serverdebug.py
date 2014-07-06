@@ -8,8 +8,8 @@ print 'this is a test'
 
 #def worker( address, commands ):
 def worker( cmdQueue, i, ):
-    cmd = cmdQueue.get()
     while True:
+        cmd = cmdQueue.get()
         if cmd is None:
             print i,'attempting to clean up'
             return
@@ -65,4 +65,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-# help from: http://stackoverflow.com/questions/11436502/closing-all-threads-with-a-keyboard-interrupt
