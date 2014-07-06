@@ -111,7 +111,8 @@ def tupToHex( foolist ):
 def worker( cmdQueue, connection):
     while True:
         cmd = cmdQueue.get()
-        #print connection.ble_adr, 'rcvd from queue:', cmd
+        print connection.ble_adr, 'rcvd from queue:', cmd
+        #print connection.ble_adr, ': queue size: ', cmdQueue.qsize()
         if cmd is None:
             print connection.ble_adr, ': attempting to cleanup'
             connection.cleanup()
@@ -128,7 +129,7 @@ def main():
     connections = []
 
     addresses = blescan.blescan()
-    while len(addresses) != constants.NUM_ROBOTS:
+    while len(addresses) < constants.NUM_ROBOTS:
         c = True
         while c:
             inp = raw_input('Expected ' + str(constants.NUM_ROBOTS) + ', found ' + str(len(addresses)) + ' robots. Try hitting reset on the robots. Type "y" to continue or "n" to quit.')
@@ -140,6 +141,26 @@ def main():
                 break
             else:
                 print 'Did not understand command. Try again.'
+    if len(addresses) > constants.NUM_ROBOTS:
+        culled_adr = []
+        c = True
+        while c:
+            addresses = list(addresses)
+            print addresses
+            inp = raw_input('Expected ' + str(constants.NUM_ROBOTS) + ', found ' + str(len(addresses)) + ' robots. \
+                    Enter numbers of the robots you want, separated by commas. e.g. "0,4"')
+            indices = inp.split(',')
+            if inp.lower().startswith('n'):
+                sys.exit('User cancelled program when told too many robots found.')
+                break
+            for i in indices:
+                culled_adr = addresses[int(i)] 
+            break
+            #else:
+                #print 'Did not understand command. Try again.'
+        print 'culled', culled_adr
+        addresses = set()
+        addresses.add(culled_adr)
     for address in addresses:
         b = bleBot(address)
     # first connect them all because that takes the longest
@@ -178,7 +199,7 @@ def main():
             data = conn.recv(1024)
             #print 'rcvd data', data
             if not data: break
-            print 'received data', data
+            #print 'received data', data
             strRGB = data
             cmd = [int(s) for s in strRGB.split(',')]
             if len(cmd) == constants.LENGTH_CMD:
@@ -222,6 +243,7 @@ def main():
     except (KeyboardInterrupt, ValueError, socket.error) as inst:
         print type(inst)
         print 'closing due to error'
+        print 'number of connections: ', len(connections)
         for q in queues:
             q.put(constants.KILL_CMD)
             q.put(None)
