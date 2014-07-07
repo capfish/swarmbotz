@@ -10,7 +10,7 @@ from math import cos, sin, sqrt, pi, atan2
 from itertools import *
 from pygame.locals import *
 
-swarmbots = [1,2,3,4,5,6,7]
+swarmbots = [1]#,2,3,4,5,6,7]
 # robotPositions = [(10,20)]
 
 def arcFragment(t, arc, length):
@@ -27,14 +27,14 @@ def triangleVertices(centerPoint, rotation):
     c = tupleAdd(centerPoint, (15*cos(rotation),15*sin(rotation)))
     return (a,b,c)
 
-formation = Lemniscate(150,300,200)
-#formation = Circle(200,300,200)
-pathResolution = 16*len(swarmbots)
+#formation = Lemniscate(150,300,200)
+formation = Circle(100,300,200)
+pathResolution = 200#16*len(swarmbots)
 discretePath = []
 for i in xrange(0,pathResolution):
     discretePath.append(fragmentPoint(formation.arcIntegrand, i*formation.arcLength(0,2*pi)/pathResolution))
     discretePath[i] = formation.path(discretePath[i])
-
+print discretePath
 headings = []
 for i in xrange(0,len(discretePath)):
     x1 = discretePath[i][0]
