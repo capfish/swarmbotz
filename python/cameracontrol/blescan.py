@@ -85,10 +85,10 @@ def blescan():
             else:
                 print 'Did not understand command. Try again.'
     if i == 2:
-        print 'Could not scan: ', hciout.after
+        print 'Is dongle plugged in? Could not scan: ', hciout.before, hciout.after
         closeall(hciout)
     if i == 3:
-        print 'Could not scan: ', hciout.after
+        print 'Is dongle pluggeded in? Could not scan: ', hciout.before, hciout.after
         closeall(hciout)
     return ble_adrs
 
