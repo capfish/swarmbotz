@@ -58,7 +58,7 @@ def blescan():
     # seems like we cannot catch the timeout here, must be inside gatheradr? 
     # pexpect.timeout thrown if no inputs, aka no addresses, are being found with hcitool lescan
     hciout = pexpect.spawn('hcitool lescan', timeout=1)
-    i = hciout.expect(['LE Scan ...','File descriptor in bad state',pexpect.TIMEOUT], timeout=1)
+    i = hciout.expect(['LE Scan ...','File descriptor in bad state','failed', pexpect.TIMEOUT], timeout=1)
     if i == 0:
         ble_adrs = gatheradr(hciout)
     if i == 1:
@@ -85,6 +85,9 @@ def blescan():
             else:
                 print 'Did not understand command. Try again.'
     if i == 2:
+        print 'Could not scan: ', hciout.after
+        closeall(hciout)
+    if i == 3:
         print 'Could not scan: ', hciout.after
         closeall(hciout)
     return ble_adrs

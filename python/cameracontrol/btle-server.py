@@ -81,6 +81,7 @@ class bleBot:
         cmd = 'char-write-cmd 0x%s %s' % (self.handle, value)
         #print self.ble_adr, cmd
         self.con.sendline( cmd )
+        print 'After sending command, before: ', self.con.before, 'after :', self.con.after
         return
 
 
