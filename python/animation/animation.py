@@ -29,7 +29,7 @@ def triangleVertices(centerPoint, rotation):
 
 #formation = Lemniscate(150,300,200)
 formation = Circle(100,300,200)
-pathResolution = 200#16*len(swarmbots)
+pathResolution = 10
 discretePath = []
 for i in xrange(0,pathResolution):
     discretePath.append(fragmentPoint(formation.arcIntegrand, i*formation.arcLength(0,2*pi)/pathResolution))
