@@ -1,0 +1,231 @@
+// An array of strings
+// String[] tweets;
+// SimpleThread tweetThread = new SimpleThread(5000,"tweets");
+ 
+// float offset = 0;
+ 
+// void setup() {
+//   size(600,400);
+//   // Filling the array from our PHP script
+//   tweets = loadStrings("http://www.learningprocessing.com/php/twitter/searchtweets.php?query=%23Processing");
+//   tweetThread.start();
+// }
+ 
+// void draw() {
+//   // if (frameCount % 30 == 0) {
+//   //   tweets = loadStrings("http://www.learningprocessing.com/php/twitter/searchtweets.php?query=%23Processing");
+//   // }
+//   // Check to see if there is new data available from the thread
+//   if (tweetThread.available()) {
+//       tweets = tweetThread.getTweets();
+//   }
+//   background(255);
+//   // Drawing all the strings
+//   for (int i = 0; i < tweets.length; i++) {
+//     fill(0);
+//     text(tweets[i],10,(20+i*20 + offset) % height);
+//   }
+ 
+//   offset++;
+// }
+
+// class SimpleThread extends Thread {
+//     boolean running;           // Is the thread running?  Yes or no?
+//     int wait;                  // How many milliseconds should we wait in between executions?
+//     String id;                 // Thread name
+//     int count;                 // counter
+//     boolean available;
+ 
+//     // Constructor, create the thread
+//     // It is not running by default
+//     SimpleThread (int w, String s) {
+//         wait = w;
+//         running = false;
+//         id = s;
+//         count = 0;
+//     }
+//     // Overriding "start()"
+//     void start () {
+//         // Set running equal to true
+//         running = true;
+//         // Print messages
+//         println("Starting thread (will execute every " + wait + " milliseconds.)"); 
+//         // Do whatever start does in Thread, don't forget this!
+//         super.start();
+//     }
+//     void run () {
+//         while (running) {
+//             tweets = loadStrings("http://www.learningprocessing.com/php/twitter/searchtweets.php?query=%23Processing");
+//             // New data is available!
+//             available = true;
+//             try {
+//                 // Wait five seconds
+//                 sleep((long)(wait));
+//             } 
+//             catch (Exception e) {
+//             }
+//         }
+//     }
+
+//     boolean available() {
+//         return available;
+//     }
+
+//     String[] getTweets() {
+//         return tweets;
+//     }
+//     // Our method that quits the thread
+//     void quit() {
+//         System.out.println("Quitting."); 
+//         running = false;  // Setting running to false ends the loop in run()
+//         // IUn case the thread is waiting. . .
+//         interrupt();
+//     }
+// }
+
+import processing.net.*;
+
+Client btleSocket;
+
+String RGBcmd = "0,0,0";
+ServoThread servos = new ServoThread(20,"hello");
+
+void setup() {
+    btleSocket = new Client(this, "127.0.0.1", 5208);
+    servos.start();    
+}
+void draw() {
+}
+
+class ServoThread extends Thread {
+    PShape dot;
+    int rad = 60;
+    int count = 0;
+
+    int bots = 3;
+    float[] yspeeds = new float[bots];
+    float[] ydeltas = new float[bots];
+    ArrayList<float[]> waypoints = new ArrayList<float[]>();
+    FloatList headings = new FloatList();
+    boolean[] reverseFlags = new boolean[bots];
+
+    float maxRotSpeed = 30.0;
+    float MAXROT_INV = (2.0/PI) * maxRotSpeed;
+    float maxSpeed = 30.0;
+    float MAXSPEED_INV = (1/10.0) * maxSpeed;
+    
+    boolean running;           // Is the thread running?  Yes or no?
+    int servoDelay;                  // How many milliseconds should we wait in between executions?
+    String id;                 // Thread name
+ 
+    // Constructor, create the thread
+    // It is not running by default
+    ServoThread (int w, String s) {
+        servoDelay = w;
+        running = false;
+        id = s;
+    }
+    
+    void start() {
+        // size(640, 640);
+        // noStroke();
+        // frameRate(30);
+        // ellipseMode(RADIUS);
+        //setup initial values
+        for(int i=0; i<bots; i++) {
+            waypoints.add(new float[] {(i+1)*width/(bots+1), height/2});
+            yspeeds[i] = -8.0;
+            ydeltas[i] = 0.25;
+            reverseFlags[i] = false;
+            headings.append(-PI/2);
+        }
+        // dot = loadShape("circle-arrow-up.svg");
+    }
+
+    void run() {
+        // background(255,255,255);
+        count = count +1;
+
+        for(int i=0; i<bots; i++) {
+            float xpos = waypoints.get(waypoints.size()-bots)[0];
+            float ypos = waypoints.get(waypoints.size()-bots)[1];
+            //creates a delay between when the robots move
+            if(count > i*10) {
+                if (ypos > 0 && ypos <= height/2) {
+                    yspeeds[i] = yspeeds[i] + ydeltas[i];
+                    waypoints.add(new float[] {xpos, ypos+yspeeds[i]});
+                } else {
+                    //robot is standing still
+                    waypoints.add(waypoints.get(waypoints.size()-bots));
+                }              
+            } else {
+                //robot is standing still
+                waypoints.add(waypoints.get(waypoints.size()-bots));
+            }
+            float xpos2 = waypoints.get(waypoints.size()-1)[0];
+            float ypos2 = waypoints.get(waypoints.size()-1)[1];
+            float dx = xpos2 - xpos;
+            float dy = ypos2 - ypos;
+            float prevHeading = headings.get(headings.size()-bots);
+            //atan2 returns zero if the robot hasn't moved, we don't necessarily want to rotate
+            if(dy == 0 && dx == 0) {
+                headings.append(prevHeading);
+            } else {
+                headings.append(atan2(dy, dx));
+            }
+            float newHeading = headings.get(headings.size()-1);
+            if(reverseFlags[i]) {
+                newHeading = newHeading-PI;
+                headings.set(headings.size()-1,newHeading);
+            }
+            float deltaHeading = newHeading - prevHeading;
+            if(abs(deltaHeading) > PI/2) {
+                reverseFlags[i] = !reverseFlags[i];
+                newHeading = prevHeading - (PI - deltaHeading);
+                headings.set(headings.size()-1,newHeading);
+            }
+            deltaHeading = newHeading - prevHeading;
+            driveServos(btleSocket, i, reverseFlags[i], dx, dy, deltaHeading);
+            shape(dot,xpos2, ypos2, rad, rad);
+            try {
+                Thread.sleep(servoDelay);
+            } catch (Exception e) {
+            }
+        }
+  
+        if (count > 90) {
+            exit();
+        }
+    }
+
+    void driveServos(Client socket, int botid, boolean reverse, float dx, float dy, float dtheta) {
+        float[] rotSpeed = rotation(dtheta);
+        float transSpeed = translate(reverse, dx, dy);
+        float[] totalSpeed = {rotSpeed[0]+transSpeed, rotSpeed[1]+transSpeed};
+        socket.write(formatCmd(botid, totalSpeed));
+        return;
+    }
+
+    String formatCmd(int botid, float[] cmd) {
+        String sbotid = str(botid);
+        String leftServo = str(int(cmd[0]));
+        String rightServo = str(int(cmd[1]));
+        return(sbotid + "," + RGBcmd + "," + "" + "," + "90");
+    }
+
+    float[] rotation(float dtheta) {
+        float[] rotSpeed = new float[2];
+        rotSpeed[0] = 90-dtheta*MAXROT_INV;
+        rotSpeed[1] = 90+dtheta*MAXROT_INV;
+        return rotSpeed;
+    }
+
+    float translate(boolean reverse, float dx, float dy) {
+        float dist = sqrt(dx*dx + dy*dy);
+        float transSpeed = dist * MAXSPEED_INV;
+        if(reverse) {
+            transSpeed = -transSpeed;
+        }
+        return transSpeed;
+    }
+}
