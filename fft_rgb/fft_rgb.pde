@@ -15,7 +15,7 @@ AudioInput in;
 AudioPlayer song;
 FFT fft;
 
-boolean MICIN = true;
+boolean MICIN = false;
 
 // Visualizer efaults
 float valScale = 1.0;
@@ -69,7 +69,8 @@ void setup() {
     }
   else{
     //song = minim.loadFile("beat.mp3", 1024);
-    song = minim.loadFile("Neon Cathedral.mp3", 2048);
+    //song = minim.loadFile("Neon Cathedral.mp3", 2048);
+    song = minim.loadFile("heavyweight.mp3",2048);
     song.loop();
     fft = new FFT( song.bufferSize(), song.sampleRate() );
   }
