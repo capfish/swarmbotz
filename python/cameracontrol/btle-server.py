@@ -31,6 +31,10 @@ class bleBot:
         # OH HEXAPOD this is so sketchy, it will break if bluez gatttool changes at all. I have version 5.20
         print "Preparing to connect. Address: " + self.ble_adr
         self.con.sendline('connect')
+        try:
+            self.con.read_nonblocking(1024,0) #flush the read pipe!! SUPER IMPORTANT
+        except:
+            pass
         i = self.con.expect(['Attempting', 'Error'], timeout=1)
         if i == 0:
             #print 'Attempting to connect'
@@ -47,6 +51,10 @@ class bleBot:
                     inp = raw_input('Try hitting reset. Type "y" to continue or "n" to quit.')
                     if inp.lower().startswith('y'):
                         self.con.sendline('connect')
+                        try:
+                            self.con.read_nonblocking(1024,0) #flush the read pipe!! SUPER IMPORTANT
+                        except:
+                            pass
                         k = self.con.expect(['Connection successful', pexpect.TIMEOUT], timeout = 1)
                         print 'k: ', k
                         if k == 0:
@@ -64,6 +72,10 @@ class bleBot:
                 print 'Attempting to connect, is device on and in range? '
                 #foostr = raw_input('Type anything to continue, or enter to cancel')
                 self.con.sendline('connect')
+                try:
+                    self.con.read_nonblocking(1024,0) #flush the read pipe!! SUPER IMPORTANT
+                except:
+                    pass
                 k = self.con.expect(['Connection successful', pexpect.TIMEOUT], timeout = 3)
                 print 'k: ', k
                 if k == 0:
@@ -82,7 +94,7 @@ class bleBot:
         #print self.ble_adr, cmd
         self.con.sendline( cmd )
         try:
-            print self.con.read_nonblocking(1024,0)
+            self.con.read_nonblocking(1024,0) #flush the read pipe!! SUPER IMPORTANT
         except:
             pass
         #print 'After sending command, before: ', self.con.before, 'after :', self.con.after
@@ -94,6 +106,10 @@ class bleBot:
         try:
             self.con.sendline('disconnect')
             self.con.sendline('exit')
+            try:
+                self.con.read_nonblocking(1024,0) #flush the read pipe!! SUPER IMPORTANT
+            except:
+                pass
             isalive = self.con.terminate(force=True)
             print self.ble_adr, ': has been terminated? ', isalive
             self.con.close(force=True)
@@ -116,7 +132,7 @@ def tupToHex( foolist ):
 def worker( cmdQueue, connection):
     while True:
         cmd = cmdQueue.get()
-        print connection.ble_adr, 'rcvd from queue:', cmd
+        #print connection.ble_adr, 'rcvd from queue:', cmd
         #print connection.ble_adr, ': queue size: ', cmdQueue.qsize()
         if cmd is None:
             print connection.ble_adr, ': attempting to cleanup'
@@ -192,10 +208,18 @@ def main():
     #ports_init(int(sys.argv[1]))
     HOST = ''                 # Symbolic name meaning all available interfaces
     PORT = constants.PORT_BTLE # Arbitrary non-privileged port
+    print 'expecting port: ', PORT
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((HOST, PORT))
     s.listen(1)
-    conn, addr = s.accept()
+    try:
+        conn, addr = s.accept()
+    except (KeyboardInterrupt, ValueError, socket.error) as inst:
+        print "Caught exceptionr: ", type(inst), "closing ble connections"
+        for connection in connections:
+            connection.cleanup()
+        sys.exit(0)
+        
     print 'port: ', PORT, '|| Connected by', addr
 
 
@@ -204,14 +228,28 @@ def main():
             data = conn.recv(1024)
             #print 'rcvd data', data
             if not data: break
-            #print 'received data', data
+            print 'received data', data
             strRGB = data
-            cmd = [int(s) for s in strRGB.split(',')]
+            ##############
+            cmd = [int(s) for s in strRGB.rstrip().split(',')] #for python 
+            ###############
+             # for rgb music, because the packets tend to squish together
+             # such hack much disgust
             if len(cmd) == constants.LENGTH_CMD:
                 botID = cmd[0]
                 queues[botID].put(cmd[1:])
             else:
-                print 'invalid command received: ', cmd
+                if len(cmd) == 2*constants.LENGTH_CMD-1:
+                    clean = cmd[:constants.LENGTH_CMD]
+                    clean[constants.LENGTH_CMD-1] = int(str(clean[constants.LENGTH_CMD-1])[:-1]) #strip final char from int
+                    botID = clean[0]
+                    queues[botID].put(clean[1:])
+                    clean = cmd[constants.LENGTH_CMD-1:]
+                    clean[0] = int(str(clean[0])[2:]) #strip first two char from int
+                    botID = clean[0]
+                    queues[botID].put(clean[1:])
+                else:
+                    print 'invalid command received: ', cmd
 
             #print cmd
 
