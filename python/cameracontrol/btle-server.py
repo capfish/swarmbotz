@@ -210,8 +210,9 @@ def main():
     PORT = constants.PORT_BTLE # Arbitrary non-privileged port
     print 'expecting port: ', PORT
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((HOST, PORT))
-    s.listen(1)
+    s.listen(constants.MAX_BTLE_CONNECTIONS)
     try:
         conn, addr = s.accept()
     except (KeyboardInterrupt, ValueError, socket.error) as inst:
@@ -235,21 +236,41 @@ def main():
             ###############
              # for rgb music, because the packets tend to squish together
              # such hack much disgust
-            if len(cmd) == constants.LENGTH_CMD:
-                botID = cmd[0]
-                queues[botID].put(cmd[1:])
-            else:
-                if len(cmd) == 2*constants.LENGTH_CMD-1:
-                    clean = cmd[:constants.LENGTH_CMD]
-                    clean[constants.LENGTH_CMD-1] = int(str(clean[constants.LENGTH_CMD-1])[:-1]) #strip final char from int
-                    botID = clean[0]
-                    queues[botID].put(clean[1:])
-                    clean = cmd[constants.LENGTH_CMD-1:]
-                    clean[0] = int(str(clean[0])[2:]) #strip first two char from int
-                    botID = clean[0]
-                    queues[botID].put(clean[1:])
+            if cmd[1] == constants.PREFIX_COLOR:
+                if len(cmd) == constants.LENGTH_CMD_C:
+                    botID = cmd[0]
+                    queues[botID].put(cmd[1:])
                 else:
-                    print 'invalid command received: ', cmd
+                    if len(cmd) == 2*constants.LENGTH_CMD_C-1:
+                        clean = cmd[:constants.LENGTH_CMD_C]
+                        clean[constants.LENGTH_CMD_C-1] = int(str(clean[constants.LENGTH_CMD_C-1])[:-1]) #strip final char from int
+                        botID = clean[0]
+                        queues[botID].put(clean[1:])
+                        clean = cmd[constants.LENGTH_CMD_C-1:]
+                        clean[0] = int(str(clean[0])[2:]) #strip first two char from int
+                        botID = clean[0]
+                        queues[botID].put(clean[1:])
+                    else:
+                        print 'invalid color command received: ', cmd
+            elif cmd[1] == constants.PREFIX_SERVO:
+                if len(cmd) == constants.LENGTH_CMD_S:
+                    botID = cmd[0]
+                    queues[botID].put(cmd[1:])
+                else:
+                    if len(cmd) == 2*constants.LENGTH_CMD_S-1:
+                        clean = cmd[:constants.LENGTH_CMD_S]
+                        clean[constants.LENGTH_CMD_S-1] = int(str(clean[constants.LENGTH_CMD_S-1])[:-1]) #strip final char from int
+                        botID = clean[0]
+                        queues[botID].put(clean[1:])
+                        clean = cmd[constants.LENGTH_CMD_S-1:]
+                        clean[0] = int(str(clean[0])[2:]) #strip first two char from int
+                        botID = clean[0]
+                        queues[botID].put(clean[1:])
+                    else:
+                        print 'invalid servo command received: ', cmd
+            else:
+                print 'invalid command type (servo or color) received: ', cmd, 'expected: ', constants.CMD_FORMAT
+
 
             #print cmd
 
@@ -273,7 +294,8 @@ def main():
         print 'closing normally'
         print 'number of connections: ', len(connections)
         for q in queues:
-            q.put(constants.KILL_CMD)
+            q.put(constants.KILL_CMD_C)
+            q.put(constants.KILL_CMD_S)
             q.put(None)
         for t in threads:
             t.join() #timeout required so that main thread also receives KeyboardInterrupt
@@ -288,7 +310,8 @@ def main():
         print 'closing due to error'
         print 'number of connections: ', len(connections)
         for q in queues:
-            q.put(constants.KILL_CMD)
+            q.put(constants.KILL_CMD_C)
+            q.put(constants.KILL_CMD_S)
             q.put(None)
         for t in threads:
             t.join() #timeout required so that main thread also receives KeyboardInterrupt
