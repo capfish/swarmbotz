@@ -108,7 +108,7 @@ String formatCmd(int botid, float[] cmd) {
     String sbotid = str(botid);
     String leftServo = str(int(cmd[0]));
     String rightServo = str(int(cmd[1]));
-    return(sbotid + "," + RGBcmd[botid] + "," + "90" + "," + "90");
+    return(sbotid + "," + RGBcmd[botid] + "," + leftServo + "," + rightServo);
 }
 
 float[] rotation(float dtheta) {

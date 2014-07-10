@@ -5,7 +5,7 @@
 
 import os, sys
 from ctypes.util import find_library
-import pexpect, traceback, threading, Queue, time, socket
+import pexpect, traceback, threading, Queue, time, socket, select
 import constants, blescan
 
 
@@ -32,7 +32,7 @@ class bleBot:
         print "Preparing to connect. Address: " + self.ble_adr
         self.con.sendline('connect')
         try:
-            self.con.read_nonblocking(1024,0) #flush the read pipe!! SUPER IMPORTANT
+            self.con.read_nonblocking(2048,0) #flush the read pipe!! SUPER IMPORTANT
         except:
             pass
         i = self.con.expect(['Attempting', 'Error'], timeout=1)
@@ -52,7 +52,7 @@ class bleBot:
                     if inp.lower().startswith('y'):
                         self.con.sendline('connect')
                         try:
-                            self.con.read_nonblocking(1024,0) #flush the read pipe!! SUPER IMPORTANT
+                            self.con.read_nonblocking(2048,0) #flush the read pipe!! SUPER IMPORTANT
                         except:
                             pass
                         k = self.con.expect(['Connection successful', pexpect.TIMEOUT], timeout = 1)
@@ -73,7 +73,7 @@ class bleBot:
                 #foostr = raw_input('Type anything to continue, or enter to cancel')
                 self.con.sendline('connect')
                 try:
-                    self.con.read_nonblocking(1024,0) #flush the read pipe!! SUPER IMPORTANT
+                    self.con.read_nonblocking(2048,0) #flush the read pipe!! SUPER IMPORTANT
                 except:
                     pass
                 k = self.con.expect(['Connection successful', pexpect.TIMEOUT], timeout = 3)
@@ -94,7 +94,7 @@ class bleBot:
         #print self.ble_adr, cmd
         self.con.sendline( cmd )
         try:
-            self.con.read_nonblocking(1024,0) #flush the read pipe!! SUPER IMPORTANT
+            print self.con.read_nonblocking(2048,0) #flush the read pipe!! SUPER IMPORTANT
         except:
             pass
         #print 'After sending command, before: ', self.con.before, 'after :', self.con.after
@@ -107,7 +107,7 @@ class bleBot:
             self.con.sendline('disconnect')
             self.con.sendline('exit')
             try:
-                self.con.read_nonblocking(1024,0) #flush the read pipe!! SUPER IMPORTANT
+                self.con.read_nonblocking(2048,0) #flush the read pipe!! SUPER IMPORTANT
             except:
                 pass
             isalive = self.con.terminate(force=True)
@@ -132,6 +132,7 @@ def tupToHex( foolist ):
 def worker( cmdQueue, connection):
     while True:
         cmd = cmdQueue.get()
+        print 'queue items left: ', cmdQueue.qsize()
         #print connection.ble_adr, 'rcvd from queue:', cmd
         #print connection.ble_adr, ': queue size: ', cmdQueue.qsize()
         if cmd is None:
@@ -144,8 +145,46 @@ def worker( cmdQueue, connection):
 
 #def ports_init(portnum):
 
+def sendRobotCmds(cmd, queues):
+    if cmd[1] == constants.PREFIX_COLOR:
+        if len(cmd) == constants.LENGTH_CMD_C:
+            botID = cmd[0]
+            queues[botID].put(cmd[1:])
+         ##############
+         # for rgb music, because the packets tend to squish together
+         # such hack much disgust
+        else:
+            if len(cmd) == 2*constants.LENGTH_CMD_C-1:
+                clean = cmd[:constants.LENGTH_CMD_C]
+                clean[constants.LENGTH_CMD_C-1] = int(str(clean[constants.LENGTH_CMD_C-1])[:-1]) #strip final char from int
+                botID = clean[0]
+                queues[botID].put(clean[1:])
+                clean = cmd[constants.LENGTH_CMD_C-1:]
+                clean[0] = int(str(clean[0])[2:]) #strip first two char from int
+                botID = clean[0]
+                queues[botID].put(clean[1:])
+            else:
+                print 'invalid color command received: ', cmd
+    elif cmd[1] == constants.PREFIX_SERVO:
+        if len(cmd) == constants.LENGTH_CMD_S:
+            botID = cmd[0]
+            queues[botID].put(cmd[1:])
+        else:
+            if len(cmd) == 2*constants.LENGTH_CMD_S-1:
+                clean = cmd[:constants.LENGTH_CMD_S]
+                clean[constants.LENGTH_CMD_S-1] = int(str(clean[constants.LENGTH_CMD_S-1])[:-1]) #strip final char from int
+                botID = clean[0]
+                queues[botID].put(clean[1:])
+                clean = cmd[constants.LENGTH_CMD_S-1:]
+                clean[0] = int(str(clean[0])[2:]) #strip first two char from int
+                botID = clean[0]
+                queues[botID].put(clean[1:])
+            else:
+                print 'invalid servo command received: ', cmd
+    else:
+        print 'invalid command type (servo or color) received: ', cmd, 'expected: ', constants.CMD_FORMAT
 def main():
-    print 'Server running, ready to accept commands to pass over BTLE to peripherals.'
+    print 'Server running, ready to scan for BTLE peripherals.'
 
     connections = []
 
@@ -209,119 +248,66 @@ def main():
     HOST = ''                 # Symbolic name meaning all available interfaces
     PORT = constants.PORT_BTLE # Arbitrary non-privileged port
     print 'expecting port: ', PORT
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind((HOST, PORT))
-    s.listen(constants.MAX_BTLE_CONNECTIONS)
-    try:
-        conn, addr = s.accept()
-    except (KeyboardInterrupt, ValueError, socket.error) as inst:
-        print "Caught exceptionr: ", type(inst), "closing ble connections"
-        for connection in connections:
-            connection.cleanup()
-        sys.exit(0)
-        
-    print 'port: ', PORT, '|| Connected by', addr
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server_socket.bind((HOST, PORT))
+    server_socket.listen(constants.MAX_BTLE_CONNECTIONS)
+    sockets = []
+    sockets.append(server_socket)
+    print 'Server ready to accept commands to pass over BTLE to peripherals'
 
-
-    try:
-        while 1:
-            data = conn.recv(1024)
-            #print 'rcvd data', data
-            if not data: break
-            print 'received data', data
-            strRGB = data
-            ##############
-            cmd = [int(s) for s in strRGB.rstrip().split(',')] #for python 
-            ###############
-             # for rgb music, because the packets tend to squish together
-             # such hack much disgust
-            if cmd[1] == constants.PREFIX_COLOR:
-                if len(cmd) == constants.LENGTH_CMD_C:
-                    botID = cmd[0]
-                    queues[botID].put(cmd[1:])
-                else:
-                    if len(cmd) == 2*constants.LENGTH_CMD_C-1:
-                        clean = cmd[:constants.LENGTH_CMD_C]
-                        clean[constants.LENGTH_CMD_C-1] = int(str(clean[constants.LENGTH_CMD_C-1])[:-1]) #strip final char from int
-                        botID = clean[0]
-                        queues[botID].put(clean[1:])
-                        clean = cmd[constants.LENGTH_CMD_C-1:]
-                        clean[0] = int(str(clean[0])[2:]) #strip first two char from int
-                        botID = clean[0]
-                        queues[botID].put(clean[1:])
-                    else:
-                        print 'invalid color command received: ', cmd
-            elif cmd[1] == constants.PREFIX_SERVO:
-                if len(cmd) == constants.LENGTH_CMD_S:
-                    botID = cmd[0]
-                    queues[botID].put(cmd[1:])
-                else:
-                    if len(cmd) == 2*constants.LENGTH_CMD_S-1:
-                        clean = cmd[:constants.LENGTH_CMD_S]
-                        clean[constants.LENGTH_CMD_S-1] = int(str(clean[constants.LENGTH_CMD_S-1])[:-1]) #strip final char from int
-                        botID = clean[0]
-                        queues[botID].put(clean[1:])
-                        clean = cmd[constants.LENGTH_CMD_S-1:]
-                        clean[0] = int(str(clean[0])[2:]) #strip first two char from int
-                        botID = clean[0]
-                        queues[botID].put(clean[1:])
-                    else:
-                        print 'invalid servo command received: ', cmd
-            else:
-                print 'invalid command type (servo or color) received: ', cmd, 'expected: ', constants.CMD_FORMAT
-
-
-            #print cmd
-
-            #botnum = cmd[0]
-            #botcmd = cmd[1:4]
-            #rgbcmd = [0,0,0]
-            #botcmd = rgbcmd + botcmd
-            #print 'botcmd', botcmd
-            #queues[botnum].put(botcmd)
+    while 1:
+        try:
+            read_sockets,write_sockets,error_sockets = select.select(sockets,[],[])
+            for sock in read_sockets:
+                if sock == server_socket:
+                    try:
+                        conn, addr = server_socket.accept()
+                        sockets.append(conn)
+                        print "Client (%s, %s) connect" % addr
+                    except (KeyboardInterrupt, ValueError, socket.error) as inst:
+                        print "Caught exceptionr: ", type(inst), "closing ble connections"
+                        for connection in connections:
+                            connection.cleanup()
+                        for conn in sockets:
+                            conn.shutdown(socket.SHUT_RDWR)
+                            conn.close()
+                        sys.exit(0)
+                    print 'port: ', PORT, '|| Connected by', addr
             
-            #queues[0].put([255,0,0,92,92])
-            #queues[1].put([255,0,0,92,92])
+                else:
+                    try:
+                        data = sock.recv(2048)
+                        print 'received data', data
+                        strRGB = data
+                        ##############
+                        cmd = [int(s) for s in strRGB.rstrip().split(',')] #for python 
+                        sendRobotCmds(cmd, queues)
+                    except:
+                        print "Client (%s, %s) is offline" % addr, 'removing from list of sockets: ', sockets
+                        sock.close()
+                        sockets.remove(sock)
+                        continue
+        except (KeyboardInterrupt) as inst:
+            print type(inst)
+            print 'closing due to error'
+            print 'number of robots connected: ', len(connections)
+            print 'number of sockets connect: ', len(sockets)
+            for q in queues:
+                q.put(constants.KILL_CMD_C)
+                q.put(constants.KILL_CMD_S)
+                q.put(None)
+            for t in threads:
+                t.join() #timeout required so that main thread also receives KeyboardInterrupt
+            print 'threads closed'
+            for conn in sockets:
+                conn.shutdown(socket.SHUT_RDWR)
+                conn.close()
+                print 'serial connection closed: ', conn
+            sys.exit()
+    print 'closing normally'
+    server_socket.close()
 
-            #cmdRed = cmd[0:3]
-            #cmdGreen = cmd[3:6]
-            #cmdBlue= cmd[6:9]
-            #queues[0].put(cmdRed)
-            #queues[1].put(cmdGreen)
-            #queues[2].put(cmdBlue)
-            
-        print 'closing normally'
-        print 'number of connections: ', len(connections)
-        for q in queues:
-            q.put(constants.KILL_CMD_C)
-            q.put(constants.KILL_CMD_S)
-            q.put(None)
-        for t in threads:
-            t.join() #timeout required so that main thread also receives KeyboardInterrupt
-        print 'threads closed'
-        conn.shutdown(socket.SHUT_RDWR)
-        conn.close()
-        print 'serial connection closed'
-        sys.exit()
-
-    except (KeyboardInterrupt, ValueError, socket.error) as inst:
-        print type(inst)
-        print 'closing due to error'
-        print 'number of connections: ', len(connections)
-        for q in queues:
-            q.put(constants.KILL_CMD_C)
-            q.put(constants.KILL_CMD_S)
-            q.put(None)
-        for t in threads:
-            t.join() #timeout required so that main thread also receives KeyboardInterrupt
-        print 'threads closed'
-        conn.shutdown(socket.SHUT_RDWR)
-        conn.close()
-        print 'serial connection closed'
-        sys.exit()
-
-    #sys.exit(0)
 
 
 if __name__ == "__main__":

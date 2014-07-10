@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<swistrack>
+  <components>
+    <component type="InputCameraUSB">
+      <enabledinterval value="1"/>
+      <parameter name="CameraNumber" value="1"/>
+    </component>
+    <component type="ConvertToGray">
+      <enabledinterval value="1"/>
+    </component>
+    <component type="ThresholdGray">
+      <enabledinterval value="1"/>
+      <parameter name="Threshold" value="29"/>
+    </component>
+    <component type="BlobDetectionMinMax">
+      <enabledinterval value="1"/>
+      <parameter name="AreaBool" value="true"/>
+      <parameter name="CompactnessBool" value="true"/>
+      <parameter name="MaxArea" value="50"/>
+      <parameter name="MaxCompactness" value="1.000000"/>
+      <parameter name="MinArea" value="5"/>
+      <parameter name="MinCompactness" value="0.160000"/>
+    </component>
+    <component type="DynamicNearestNeighborTracking">
+      <enabledinterval value="1"/>
+    </component>
+    <component type="OutputParticles">
+      <enabledinterval value="1"/>
+    </component>
+  </components>
+  <server>
+    <port>3000</port>
+  </server>
+</swistrack>

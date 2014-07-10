@@ -37,6 +37,7 @@ int redPin = 3;
 int greenPin = 5;
 int bluePin = 6;
 #define COMMON_ANODE
+// #define DEBUG
     
 void setColor(int red, int green, int blue)
 {
@@ -80,26 +81,18 @@ void aciCallback(aci_evt_opcode_t event)
 /**************************************************************************/
 void rxCallback(uint8_t *buffer, uint8_t len)
 {
+  #ifdef DEBUG
   Serial.print(F("Received "));
   Serial.print(len);
   Serial.print(F(" bytes: "));
-
+ 
 //  else: do nothing
 
   for(int i=0; i<len; i++){
     byte msg = (byte)buffer[i];
     Serial.print(msg); 
   }
-  //Serial.println('cmd received: '); Serial.print(buffer[0]); Serial.print(buffer[1]); Serial.println(buffer[2]);
 
-  if ((byte)buffer[0] == (byte)10){ //color cmd received
-    setColor(buffer[1],buffer[2], buffer[3]);
-  }
-  else if ((byte)buffer[0] == (byte)20){ //string cmd received
-    Lservo.write(buffer[1]);
-    Rservo.write(map(buffer[2],0,180,180,0));
-  }
-  
   Serial.print(F(" ["));
 
   for(int i=0; i<len; i++)
@@ -109,6 +102,18 @@ void rxCallback(uint8_t *buffer, uint8_t len)
 //    Serial.print(" "); Serial.print((byte)buffer[i], DEC);
   }
   Serial.println(F(" ]"));
+  //Serial.println('cmd received: '); Serial.print(buffer[0]); Serial.print(buffer[1]); Serial.println(buffer[2]);
+
+  #endif
+  
+  if ((byte)buffer[0] == (byte)10){ //color cmd received
+    setColor(buffer[1],buffer[2], buffer[3]);
+  }
+  else if ((byte)buffer[0] == (byte)20){ //string cmd received
+    Lservo.write(buffer[1]);
+    Rservo.write(map(buffer[2],0,180,180,0));
+  }
+  
 
 //  Serial.print("Packet number: ");Serial.println(pktNumber);
 //  pktNumber++;
@@ -124,16 +129,18 @@ void rxCallback(uint8_t *buffer, uint8_t len)
 /**************************************************************************/
 void setup(void)
 { 
-  Serial.begin(9600);
+  #ifdef DEBUG
+  Serial.begin(115200);
   while(!Serial); // Leonardo/Micro should wait for serial init
   Serial.println(F("Adafruit Bluefruit Low Energy nRF8001 Callback Echo demo"));
-
+  #endif
+  
   uart.setRXcallback(rxCallback);
   uart.setACIcallback(aciCallback);
   uart.begin();
   
-  Lservo.attach(7, 544, 2500); // this way stops at 90
-  Rservo.attach(8, 500, 2500); 
+  Lservo.attach(7); // this way stops at 90
+  Rservo.attach(8); 
   Lservo.write(90);
   Rservo.write(90);
   

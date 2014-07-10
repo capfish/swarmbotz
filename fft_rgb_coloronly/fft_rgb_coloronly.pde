@@ -16,7 +16,7 @@ AudioPlayer song;
 FFT fft;
 
 String COLOR_TYPE = "10"; 
-boolean MICIN = false;
+boolean MICIN = true;
 
 // Visualizer efaults
 float valScale = 1.0;
@@ -48,7 +48,7 @@ int lastHeight = 0;
 
 String rvals, gvals, bvals;
 int dropTime = 0; //drop packets 
-int dropMax = 5; //every how many?
+int dropMax =  5; //every how many?
 
 
 

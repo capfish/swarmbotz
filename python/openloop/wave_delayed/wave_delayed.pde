@@ -7,7 +7,7 @@ PShape dot;
 int rad = 60;
 int count = 0;
 
-int bots = 1;
+int bots = 3;
 float[] yspeeds = new float[bots];
 float[] ydeltas = new float[bots];
 ArrayList<float[]> waypoints = new ArrayList<float[]>();
@@ -18,12 +18,19 @@ float maxRotSpeed = 30.0;
 float MAXROT_INV = (2.0/PI) * maxRotSpeed;
 float maxSpeed = 30.0;
 float MAXSPEED_INV = (1/10.0) * maxSpeed;
-//String[] RGBcmd = {"255,255,0", "255,0,255", "0,255,255"};
-String SERVO_TYPE = "20";
+String[] RGBcmd = {"0,0,0", "0,0,0", "0,0,0"};
+
+String[] RGB1 = {"255,255,0", "0,0,0", "0,0,0"};
+String[] RGB2 = {"255,255,0", "255,0,255", "0,0,0"};
+String[] RGB3 = {"255,255,0", "255,0,255", "0,255,255"};
+ArrayList<String[]> RGBfoo = new ArrayList<String[]>();
 
 void setup()
 {
-    btleSocket = new Client(this, "127.0.0.1", 5207);
+RGBfoo.add(RGB1);
+RGBfoo.add(RGB2);
+RGBfoo.add(RGB3);
+  btleSocket = new Client(this, "127.0.0.1", 5207);
     output = createWriter("positions.txt"); 
     size(640, 640);
     noStroke();
@@ -50,6 +57,7 @@ void draw()
       float ypos = waypoints.get(waypoints.size()-bots)[1];
       //creates a delay between when the robots move
       if(count > i*10) {
+        RGBcmd = RGBfoo.get(i);
           if (ypos > 0 && ypos <= height/2) {
               yspeeds[i] = yspeeds[i] + ydeltas[i];
               waypoints.add(new float[] {xpos, ypos+yspeeds[i]});
@@ -87,7 +95,7 @@ void draw()
       driveServos(btleSocket, i, reverseFlags[i], dx, dy, deltaHeading);
       shape(dot,xpos2, ypos2, rad, rad);
       try {
-          Thread.sleep(100);
+          Thread.sleep(20);
       } catch (Exception e) {
       }
   }
@@ -109,7 +117,7 @@ String formatCmd(int botid, float[] cmd) {
     String sbotid = str(botid);
     String leftServo = str(int(cmd[0]));
     String rightServo = str(int(cmd[1]));
-    return(sbotid + "," + SERVO_TYPE + "," + leftServo + "," + rightServo);
+    return(sbotid + "," + RGBcmd[botid] + "," + leftServo + "," + rightServo);
 }
 
 float[] rotation(float dtheta) {

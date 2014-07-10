@@ -1,4 +1,22 @@
-import processing.net.*;
+import processing.core.*; 
+import processing.data.*; 
+import processing.event.*; 
+import processing.opengl.*; 
+
+import processing.net.*; 
+
+import java.util.HashMap; 
+import java.util.ArrayList; 
+import java.io.File; 
+import java.io.BufferedReader; 
+import java.io.PrintWriter; 
+import java.io.InputStream; 
+import java.io.OutputStream; 
+import java.io.IOException; 
+
+public class wave extends PApplet {
+
+
 
 Client btleSocket;
 PrintWriter output;
@@ -7,23 +25,22 @@ PShape dot;
 int rad = 60;
 int count = 0;
 
-int bots = 1;
+int bots = 3;
 float[] yspeeds = new float[bots];
 float[] ydeltas = new float[bots];
 ArrayList<float[]> waypoints = new ArrayList<float[]>();
 FloatList headings = new FloatList();
 boolean[] reverseFlags = new boolean[bots];
 
-float maxRotSpeed = 30.0;
-float MAXROT_INV = (2.0/PI) * maxRotSpeed;
-float maxSpeed = 30.0;
-float MAXSPEED_INV = (1/10.0) * maxSpeed;
-//String[] RGBcmd = {"255,255,0", "255,0,255", "0,255,255"};
-String SERVO_TYPE = "20";
+float maxRotSpeed = 30.0f;
+float MAXROT_INV = (2.0f/PI) * maxRotSpeed;
+float maxSpeed = 30.0f;
+float MAXSPEED_INV = (1/10.0f) * maxSpeed;
+String[] RGBcmd = {"255,255,0", "255,0,255", "0,255,255"};
 
-void setup()
+public void setup()
 {
-    btleSocket = new Client(this, "127.0.0.1", 5207);
+    btleSocket = new Client(this, "127.0.0.1", 5208);
     output = createWriter("positions.txt"); 
     size(640, 640);
     noStroke();
@@ -32,15 +49,15 @@ void setup()
     //setup initial values
     for(int i=0; i<bots; i++) {
         waypoints.add(new float[] {(i+1)*width/(bots+1), height/2});
-        yspeeds[i] = -8.0;
-        ydeltas[i] = 0.25;
+        yspeeds[i] = -8.0f;
+        ydeltas[i] = 0.25f;
         reverseFlags[i] = false;
         headings.append(-PI/2);
     }
     dot = loadShape("circle-arrow-up.svg");
 }
 
-void draw()
+public void draw()
 {
   background(255,255,255);
   count = count +1;
@@ -87,17 +104,17 @@ void draw()
       driveServos(btleSocket, i, reverseFlags[i], dx, dy, deltaHeading);
       shape(dot,xpos2, ypos2, rad, rad);
       try {
-          Thread.sleep(100);
+          Thread.sleep(20);
       } catch (Exception e) {
       }
   }
   
-  if (count > 90) {
+  if (count < -1) {
       exit();
   }
 }
 
-void driveServos(Client socket, int botid, boolean reverse, float dx, float dy, float dtheta) {
+public void driveServos(Client socket, int botid, boolean reverse, float dx, float dy, float dtheta) {
     float[] rotSpeed = rotation(dtheta);
     float transSpeed = translate(reverse, dx, dy);
     float[] totalSpeed = {rotSpeed[0]+transSpeed, rotSpeed[1]+transSpeed};
@@ -105,21 +122,21 @@ void driveServos(Client socket, int botid, boolean reverse, float dx, float dy, 
     return;
 }
 
-String formatCmd(int botid, float[] cmd) {
+public String formatCmd(int botid, float[] cmd) {
     String sbotid = str(botid);
-    String leftServo = str(int(cmd[0]));
-    String rightServo = str(int(cmd[1]));
-    return(sbotid + "," + SERVO_TYPE + "," + leftServo + "," + rightServo);
+    String leftServo = str(PApplet.parseInt(cmd[0]));
+    String rightServo = str(PApplet.parseInt(cmd[1]));
+    return(sbotid + "," + RGBcmd[botid] + "," + "90" + "," + "90");
 }
 
-float[] rotation(float dtheta) {
+public float[] rotation(float dtheta) {
     float[] rotSpeed = new float[2];
     rotSpeed[0] = 90-dtheta*MAXROT_INV;
     rotSpeed[1] = 90+dtheta*MAXROT_INV;
     return rotSpeed;
 }
 
-float translate(boolean reverse, float dx, float dy) {
+public float translate(boolean reverse, float dx, float dy) {
     float dist = sqrt(dx*dx + dy*dy);
     float transSpeed = dist * MAXSPEED_INV;
     if(reverse) {
@@ -199,3 +216,12 @@ float translate(boolean reverse, float dx, float dy) {
 
 // if __name__ == "__main__":
 //     main()
+  static public void main(String[] passedArgs) {
+    String[] appletArgs = new String[] { "wave" };
+    if (passedArgs != null) {
+      PApplet.main(concat(appletArgs, passedArgs));
+    } else {
+      PApplet.main(appletArgs);
+    }
+  }
+}
