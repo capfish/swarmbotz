@@ -7,7 +7,7 @@ PShape dot;
 int rad = 60;
 int count = 0;
 
-int bots = 1;
+int bots = 3;
 float[] yspeeds = new float[bots];
 float[] ydeltas = new float[bots];
 ArrayList<float[]> waypoints = new ArrayList<float[]>();

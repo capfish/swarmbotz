@@ -206,8 +206,8 @@ void draw() {
     
   if (dropTime == dropMax){
     myClient.write(rvals);
-    //myClient.write(gvals);
-    //myClient.write(bvals);
+    myClient.write(gvals);
+    myClient.write(bvals);
     dropTime = 0;
   }
   dropTime++;
