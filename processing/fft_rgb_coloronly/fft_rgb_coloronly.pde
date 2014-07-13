@@ -16,7 +16,7 @@ AudioPlayer song;
 FFT fft;
 
 String COLOR_TYPE = "10"; 
-boolean MICIN = true;
+boolean MICIN = false;
 
 // Visualizer efaults
 float valScale = 1.0;
@@ -48,7 +48,7 @@ int lastHeight = 0;
 
 String rvals, gvals, bvals;
 int dropTime = 0; //drop packets 
-int dropMax =  5; //every how many?
+int dropMax =  10; //every how many?
 
 
 
@@ -200,14 +200,14 @@ void draw() {
     rect(leftBorder(), height - 0.8*bottomBorder(), width-rightBorder(), height - .5*bottomBorder());
 
 ////ARDUINO!!
-    rvals = "0," + COLOR_TYPE + "," + r + "," +  g + "," + b;
-    gvals = "1," + COLOR_TYPE + "," + r + "," +  g + "," + b;
-    bvals = "2," + COLOR_TYPE + "," + r + "," +  g + "," + b;
+    rvals = "0," + COLOR_TYPE + "," + r + "," +  g + "," + b + ",";
+    gvals = "1," + COLOR_TYPE + "," + r + "," +  g + "," + b + ",";
+    bvals = "2," + COLOR_TYPE + "," + r + "," +  g + "," + b + ",";
     
   if (dropTime == dropMax){
     myClient.write(rvals);
     myClient.write(gvals);
-    myClient.write(bvals);
+    //myClient.write(bvals);
     dropTime = 0;
   }
   dropTime++;
