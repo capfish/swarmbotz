@@ -1,3 +1,7 @@
+import processing.net.*; 
+
+Client myClient;
+
 int boxSize = 50;
 int buttonSizeX = 20;
 int buttonSizeY= 10;
@@ -19,10 +23,7 @@ boolean robot3 = false;
 float upx, upy, downx, downy, leftx, lefty, rightx, righty, button1x, button2x, button3x, buttony;
 PShape up, down, left, right;
 
-import processing.net.*; 
-Client myClient;
-String COLOR_TYPE = "20"; 
-
+String[] outputs = new String[3];
 
 void setup() 
 {
@@ -47,8 +48,7 @@ void setup()
   left = loadShape("turn_left.svg");
   right = loadShape("turn_right.svg");
   
-    myClient = new Client(this, "127.0.0.1", 5207);
-
+  myClient = new Client(this, "127.0.0.1", 5207);
 }
 
 void draw() 
@@ -184,6 +184,8 @@ void draw()
     textSize(20);
     text("ON", (4.5*width)/5.8, height/6.4);
   }
+  
+  
 }
 
 void mousePressed() {
@@ -226,8 +228,64 @@ void mousePressed() {
     robot2 = !robot2;
   if (overButton3)
     robot3 = !robot3;
-  println(formatCmd());
-  myClient.write(formatCmd());
+    
+    
+  if(robot1 == true)
+  {
+    if(Uplocked == true)
+      outputs[0] = "0,20,100,100";
+    else if(Downlocked == true)
+      outputs[0] = "0,20,80,80";
+    else if(Leftlocked == true)
+      outputs[0] = "0,20,80,100";
+    else if(Rightlocked == true)
+      outputs[0] = "0,20,100,80";
+    else
+      outputs[0] = "0,20,90,90";
+  }
+  else
+    outputs[0] = "0,20,90,90";
+  
+  
+  if(robot2 == true)
+  {
+    if(Uplocked == true)
+      outputs[1] = "1,20,100,100";
+    else if(Downlocked == true)
+      outputs[1] = "1,20,80,80";
+    else if(Leftlocked == true)
+      outputs[1] = "1,20,80,100";
+    else if(Rightlocked == true)
+      outputs[1] = "1,20,100,80";
+    else
+      outputs[1] = "1,20,90,90";
+  }
+  else
+    outputs[1] = "1,20,90,90";
+      
+      
+  if(robot3 == true)
+  {
+    if(Uplocked == true)
+      outputs[2] = "2,20,100,100";
+    else if(Downlocked == true)
+      outputs[2] = "2,20,80,80";
+    else if(Leftlocked == true)
+      outputs[2] = "2,20,80,100";
+    else if(Rightlocked == true)
+      outputs[2] = "2,20,100,80";
+    else
+      outputs[2] = "2,20,90,90";
+   
+  }
+   else
+     outputs[2] = "2,20,90,90";
+    
+  for(int i = 0; i < 2; i++)
+  {
+    myClient.write(outputs[i]+",");   //???? is this right??
+    //println(outputs[i]);
+  }
 }
 
 void mouseReleased() 
@@ -237,49 +295,4 @@ void mouseReleased()
   Leftlocked = false;
   Rightlocked = false;
   //println("up = ", Uplocked, ", down = ", Downlocked, ", right = ", Rightlocked, ", left = ", Leftlocked);
-}
-
-String formatCmd()
-{
-  if(robot1 == true)
-  {
-    if(Uplocked == true)
-      return("0,20,100,100");
-    else if(Downlocked == true)
-      return("0,20,80,80");
-    else if(Leftlocked == true)
-      return("0,20,80,100");
-    else if(Rightlocked == true)
-      return("0,20,100,80");
-    else
-      return("0,20,90,90");
-  }
-  if(robot2 == true)
-  {
-    if(Uplocked == true)
-      return("1,20,100,100");
-    else if(Downlocked == true)
-      return("1,20,80,80");
-    else if(Leftlocked == true)
-      return("1,20,80,100");
-    else if(Rightlocked == true)
-      return("1,20,100,80");
-    else
-      return("1,20,90,90");
-  }
-  if(robot3 == true)
-  {
-    if(Uplocked == true)
-      return("3,20,100,100");
-    else if(Downlocked == true)
-      return("3,20,80,80");
-    else if(Leftlocked == true)
-      return("3,20,80,100");
-    else if(Rightlocked == true)
-      return("3,20,100,80");
-    else
-      return("3,20,90,90");
-  }
-  else
-    return("0,20,90,90");
 }
