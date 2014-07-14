@@ -132,8 +132,8 @@ def tupToHex( foolist ):
 def worker( cmdQueue, connection):
     while True:
         cmd = cmdQueue.get()
-        print 'queue items left: ', cmdQueue.qsize()
-        #print connection.ble_adr, 'rcvd from queue:', cmd
+        #print 'queue items left: ', cmdQueue.qsize()
+        print connection.ble_adr, 'rcvd from queue:', cmd
         #print connection.ble_adr, ': queue size: ', cmdQueue.qsize()
         if cmd is None:
             print connection.ble_adr, ': attempting to cleanup'
@@ -147,6 +147,7 @@ def worker( cmdQueue, connection):
 
 def sendRobotCmds(cmd, queues):
     if cmd[1] == constants.PREFIX_COLOR:
+
         if len(cmd) == constants.LENGTH_CMD_C:
             botID = cmd[0]
             queues[botID].put(cmd[1:])
@@ -154,15 +155,24 @@ def sendRobotCmds(cmd, queues):
          # for rgb music, because the packets tend to squish together
          # such hack much disgust
         else:
-            if len(cmd) == 2*constants.LENGTH_CMD_C-1:
-                clean = cmd[:constants.LENGTH_CMD_C]
-                clean[constants.LENGTH_CMD_C-1] = int(str(clean[constants.LENGTH_CMD_C-1])[:-1]) #strip final char from int
-                botID = clean[0]
-                queues[botID].put(clean[1:])
-                clean = cmd[constants.LENGTH_CMD_C-1:]
-                clean[0] = int(str(clean[0])[2:]) #strip first two char from int
-                botID = clean[0]
-                queues[botID].put(clean[1:])
+            if len(cmd) == 2*constants.LENGTH_CMD_C:
+                cmd1 = cmd[:constants.LENGTH_CMD_C]
+                botID = cmd1[0]
+                queues[botID].put(cmd1[1:])
+                cmd2 = cmd[constants.LENGTH_CMD_C:]
+                botID = cmd2[0]
+                queues[botID].put(cmd2[1:])
+
+
+            #if len(cmd) == 2*constants.LENGTH_CMD_C-1:
+                #clean = cmd[:constants.LENGTH_CMD_C]
+                #clean[constants.LENGTH_CMD_C-1] = int(str(clean[constants.LENGTH_CMD_C-1])[:-1]) #strip final char from int
+                #botID = clean[0]
+                #queues[botID].put(clean[1:])
+                #clean = cmd[constants.LENGTH_CMD_C-1:]
+                #clean[0] = int(str(clean[0])[2:]) #strip first two char from int
+                #botID = clean[0]
+                #queues[botID].put(clean[1:])
             else:
                 print 'invalid color command received: ', cmd
     elif cmd[1] == constants.PREFIX_SERVO:
@@ -170,15 +180,13 @@ def sendRobotCmds(cmd, queues):
             botID = cmd[0]
             queues[botID].put(cmd[1:])
         else:
-            if len(cmd) == 2*constants.LENGTH_CMD_S-1:
-                clean = cmd[:constants.LENGTH_CMD_S]
-                clean[constants.LENGTH_CMD_S-1] = int(str(clean[constants.LENGTH_CMD_S-1])[:-1]) #strip final char from int
-                botID = clean[0]
-                queues[botID].put(clean[1:])
-                clean = cmd[constants.LENGTH_CMD_S-1:]
-                clean[0] = int(str(clean[0])[2:]) #strip first two char from int
-                botID = clean[0]
-                queues[botID].put(clean[1:])
+            if len(cmd) == 2*constants.LENGTH_CMD_S:
+                cmd1 = cmd[:constants.LENGTH_CMD_S]
+                botID = cmd1[0]
+                queues[botID].put(cmd1[1:])
+                cmd2 = cmd[constants.LENGTH_CMD_S:]
+                botID = cmd2[0]
+                queues[botID].put(cmd2[1:])
             else:
                 print 'invalid servo command received: ', cmd
     else:
@@ -266,7 +274,7 @@ def main():
                         sockets.append(conn)
                         print "Client (%s, %s) connect" % addr
                     except (KeyboardInterrupt, ValueError, socket.error) as inst:
-                        print "Caught exceptionr: ", type(inst), "closing ble connections"
+                        print "Caught exception: ", type(inst), "closing ble connections"
                         for connection in connections:
                             connection.cleanup()
                         for conn in sockets:
@@ -278,12 +286,14 @@ def main():
                 else:
                     try:
                         data = sock.recv(2048)
-                        print 'received data', data
+                        #print 'received data', data
                         strRGB = data
                         ##############
-                        cmd = [int(s) for s in strRGB.rstrip().split(',')] #for python 
+
+                        cmd = [int(s) for s in filter(None, strRGB.rstrip().split(','))] #for python 
                         sendRobotCmds(cmd, queues)
-                    except:
+                    except Exception as e:
+                        print 'Exception', e
                         print "Client (%s, %s) is offline" % addr, 'removing from list of sockets: ', sockets
                         sock.close()
                         sockets.remove(sock)
