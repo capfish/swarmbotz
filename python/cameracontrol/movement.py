@@ -120,7 +120,7 @@ class swarm:
 		self.j = self.j%len(self.waypoints)
   #          message = message + str(i) + "," + str(leftVelocity) + "," + str(rightVelocity) + ":"
 	        
-	    message = "0,0,0,0," + str(leftVelocity) + "," + str(rightVelocity)
+	    message = "0,20," + str(leftVelocity) + "," + str(rightVelocity)
             print message
 	    print self.waypoints[self.j]
             self.sock.sendall(message)
