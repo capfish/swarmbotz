@@ -8,8 +8,8 @@ class SwisClient:
         self.NUM_ROBOTS = constants.NUM_ROBOTS
         self.host = constants.HOST_SWISS
         self.port = constants.PORT_SWISS 
-        self.particlesBuffer = ["0,0,0,0,0"]
-        self.ids = [1]
+        self.particlesBuffer = ["0,0,0,0,0","0,0,0,0,0","0,0,0,0,0"]
+        self.ids = [1,1,1]
         self.initialized = False
 #        print self.particlesBuffer[0]
     def readData(self):
@@ -76,7 +76,7 @@ class SwisClient:
             sortedHeadings = []
             idents = []
             ident = 0
-            print "headings"
+#            print "headings"
             for i in xrange(0, self.NUM_ROBOTS):
 #            print i
            # print particles
@@ -111,7 +111,7 @@ class SwisClient:
                 x2 = w[0]
                 y2 = w[1]
                 h = self.headingTo(x1, y1, x2, y2, angle)
-                print ident
+#                print "ident, ", ident
                 if ident in idents:
                     print "Duplicate found"
 #                    return None, None
@@ -132,7 +132,7 @@ class SwisClient:
         #particles = ["0,0,70,70,3.142"]
             distances = []
             sortedDistances = []
-            print "distances"
+           # print "distances"
             for j in xrange(0, self.NUM_ROBOTS):
             #print j
                 w = points
@@ -180,16 +180,16 @@ class SwisClient:
         angle = float(angle)
         alpha = math.atan2(y2-y1, x2-x1)
         theta = angle - alpha
-        print "theta ", theta
+        #print "theta ", theta
         #theta = (angle - alpha)/6.283
-        if theta > 3.0 * 3.142 / 2.0:
-            theta = theta - 3.0 * 3.142 / 2.0
+        if theta > 3.142:
+            theta = theta - 6.281
             #theta = 6.283 - theta
-            print "pos theta, ", theta
+            #print "pos theta, ", theta
             return theta
         if theta < -3.142:
-            theta = -3.142 - theta
-            print "neg theta, ", theta
+            theta = 6.281 + theta
+            #print "neg theta, ", theta
             return theta
         return theta
 

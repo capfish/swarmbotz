@@ -8,8 +8,8 @@ class SwisClient:
         self.NUM_ROBOTS = constants.NUM_ROBOTS
         self.host = constants.HOST_SWISS
         self.port = constants.PORT_SWISS 
-        self.particlesBuffer = ["0,0,0,0,0","0,0,0,0,0"]
-        self.ids = [1,1]
+        self.particlesBuffer = ["0,0,0,0,0","0,0,0,0,0","0,0,0,0,0"]
+        self.ids = [1,1,1]
         self.initialized = False
 #        print self.particlesBuffer[0]
     def readData(self):
@@ -45,6 +45,7 @@ class SwisClient:
         points = waypoints
         rawParticles = self.readData()
         particles = sorted(rawParticles, key=lambda idsort: idsort[1])
+        print particles
 #        print 'length', len(particles)
 #        print self.initialized
         print "particles, ", len(particles)
