@@ -11,6 +11,7 @@ class SwisClient:
         self.particlesBuffer = ["0,0,0,0,0","0,0,0,0,0","0,0,0,0,0"]
         self.ids = [1,1,1]
         self.initialized = False
+        self.prevHeading = None
 #        print self.particlesBuffer[0]
     def readData(self):
 #        while 1:
@@ -115,6 +116,17 @@ class SwisClient:
 #                print "ident, ", ident
                 if ident in idents:
                     print "Duplicate found"
+                
+                if self.prevHeading == None:
+                    prevHeading = h
+                elif abs(self.prevHeading - h) > 3.142:
+                    prevHeading = h
+                    h = (h + 3.142)
+                    if h > 3.142:
+                        h = theta - 6.281
+                    if h < -3.142:
+                        h = 6.281 + theta
+            #print "neg theta, ", theta                                                  
 #                    return None, None
                 idents.append(ident)
                 headings.append((ident,h))

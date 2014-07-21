@@ -8,7 +8,7 @@ class SwisClient:
         self.NUM_ROBOTS = constants.NUM_ROBOTS
         self.host = constants.HOST_SWISS
         self.port = constants.PORT_SWISS 
-        self.particlesBuffer = ["0,0,0,0,0","0,0,0,0,0","0,0,0,0,0"]
+        self.particlesBuffer = [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
         self.ids = [1,1,1]
         self.initialized = False
 #        print self.particlesBuffer[0]
@@ -44,8 +44,13 @@ class SwisClient:
         numBotsInitialized = 0
         points = waypoints
         rawParticles = self.readData()
-        particles = sorted(rawParticles, key=lambda idsort: idsort[1])
-#        print particles
+        unsortedParticles = []
+        for p in rawParticles:
+            unsortedParticles.append(p.split(","))
+        particles = sorted(unsortedParticles, key=lambda idsort: int(idsort[1]))
+            
+        #particles = sorted(rawParticles, key=lambda idsort: idsort[1])
+        print "part", particles
 #        print 'length', len(particles)
 #        print self.initialized
         print "particles, ", len(particles)
@@ -54,7 +59,7 @@ class SwisClient:
 
         if len(particles) == self.NUM_ROBOTS and self.initialized == False:
             for i in xrange(self.NUM_ROBOTS):
-                p = particles[i].split(",")
+                p = particles[i]#.split(",")
                 if int(p[1]) > 0:
                     self.ids[i] = p[1]
                     numBotsInitialized = numBotsInitialized + 1
@@ -83,9 +88,10 @@ class SwisClient:
            # print particles
            # print points
                 w = points
-                pastP = self.particlesBuffer[i].split(",")
+                pastP = self.particlesBuffer[i]#.split(",")
                 if len(particles) > i:                
-                    p = particles[i].split(",")
+                    p = particles[i]#.split(",")
+                    print "bot ", i, p
                 #pastP = self.particlesBuffer[i].split(",")
                 #print " i ", i
                     ident = int(p[1])
@@ -137,9 +143,9 @@ class SwisClient:
             for j in xrange(0, self.NUM_ROBOTS):
             #print j
                 w = points
-                pastP = self.particlesBuffer[j].split(",")
+                pastP = self.particlesBuffer[j]#.split(",")
                 if len(particles) > j:
-                    p = particles[j].split(",")
+                    p = particles[j]#.split(",")
                     ident = int(p[1])
                     x1 = float(p[2])
                     y1 = float(p[3])
@@ -204,7 +210,8 @@ class SwisClient:
 
     def findNearestMatch(self, x1, y1):
         index = 0
-        pastP = self.particlesBuffer[0].split(",")
+        pastP = self.particlesBuffer[0]#.split(",")
+        #print pastP
         x1 = float(x1)
         y1 = float(y1)
         x2 = float(pastP[2])
@@ -212,7 +219,7 @@ class SwisClient:
         #print "x2, y2, ", x2, y2
         distance = self.distanceTo(x1, y1, x2, y2)
         for i in xrange(1, self.NUM_ROBOTS):
-            pastP = self.particlesBuffer[i].split(",")
+            pastP = self.particlesBuffer[i]#.split(",")
             x2 = float(pastP[2])
             y2 = float(pastP[3])
         #    print "x2, y2, ", x2, y2
