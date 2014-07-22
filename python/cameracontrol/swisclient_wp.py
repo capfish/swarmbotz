@@ -37,8 +37,8 @@ class SwisClient:
 #                print 'Particle ID = ', result[1], ', X = ', result[2], ', Y = ', result[3], ', theta = ', result[4]
 #            print particles
             return particles
-
-
+    
+ 
     # Generates a list of headings for each robot to their given waypoint
     def generateHeadings(self, waypoints):
         numBotsInitialized = 0
@@ -117,7 +117,7 @@ class SwisClient:
                     print "Duplicate found"
 #                    return None, None
                 idents.append(ident)
-                headings.append((ident,h))
+                headings.append((ident,h,x1,y1,angle))
 #        print 'headings = ',  headings
 #            def find_duplicates(seq):
  #               seen = set()
