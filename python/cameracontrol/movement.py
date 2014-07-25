@@ -106,7 +106,7 @@ class swarm:
 	    #leftVelocity = 100
 	    #rightVelocity = 100
             #setVelocity(leftVelocity, rightVelocity, i)
-            0
+
             # If the robot is close enough to a waypoint, iterate to the
             # next waypoint for that robot
             distance = distances[i][1]
@@ -120,7 +120,9 @@ class swarm:
 		self.j = self.j%len(self.waypoints)
   #          message = message + str(i) + "," + str(leftVelocity) + "," + str(rightVelocity) + ":"
 	        
-	    message = "0,20," + str(leftVelocity) + "," + str(rightVelocity)
+
+	    #message = "0,20," + str(leftVelocity) + "," + str(rightVelocity)
+            message = "0,20,94,94"
             print message
 	    print self.waypoints[self.j]
             self.sock.sendall(message)

@@ -1,8 +1,10 @@
-NUM_ROBOTS = 2
+NUM_ROBOTS = 1
 PORT_BTLE = 5207
 PORT_SWISS = 3000
+PORT_PROCESSING = 4000
 HOST_SWISS = 'localhost'
 HOST_BTLE = '127.0.0.1'
+HOST_PROCESSING = '127.0.0.1'
 # botID, rval, gval, bval, lservo, rservo
 LENGTH_CMD_C = 4
 #KILL_CMD = [0,0,0,90,90]
