@@ -59,25 +59,36 @@ class swarm:
 #        print "received data, ", data
         if data != "No data":
             points = data.split(":")
+            if (points[0]=='c'):
+#                colorval = (byte)points[1]
+                print(points[1])
+                color = self.hex_to_rgb(points[1])
+                print color
+                for i in range(self.NUM_ROBOTS):
+                    message = str(i)+',10,'+str(color[0])+','+str(color[1])+','+str(color[2])
+                    self.sock.sendall(message)
+                    print message
+            else:
             #print points, " split up points"
-            tempWaypoints = self.waypoints
-            self.waypoints = []
-            if points:
+        
+                tempWaypoints = self.waypoints
                 self.waypoints = []
-                for point in points:
-                    p = point.split(",")
-                    print p
-                    x = int(p[0])
-                    y = int(p[1])
-                    self.waypoints.append((x,y))
-                dataPacket = False
-                points = None
-                print "tempwaypoints: ", tempWaypoints
-                print "waypoints: ", self.waypoints
-                if tempWaypoints != self.waypoints:
-                    self.check = [0,1]#self.initCheck
-                    print "Resetting check"
-                print "is check reset: ", self.check
+                if points:
+                    self.waypoints = []
+                    for point in points:
+                        p = point.split(",")
+                        print p
+                        x = int(p[0])
+                        y = int(p[1])
+                        self.waypoints.append((x,y))
+                    dataPacket = False
+                    points = None
+                    print "tempwaypoints: ", tempWaypoints
+                    print "waypoints: ", self.waypoints
+                    if tempWaypoints != self.waypoints:
+                        self.check = [0,1]#self.initCheck
+                        print "Resetting check"
+                    print "is check reset: ", self.check
                         
 #        print "closing socket"
         processingSock.close()
@@ -103,6 +114,13 @@ class swarm:
                     self.startPos.append((h[i][2], h[i][3], h[i][4]))
                     self.waypoints.append((h[i][2], h[i][3]))
                 return
+
+    def hex_to_rgb(self, color):
+        value = int(color)
+        blue =  value & 255
+        green = (value >> 8) & 255
+        red =   (value >> 16) & 255
+        return (red, green, blue)
 
     def closeSocket(self):
         self.sock.close()
