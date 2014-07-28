@@ -80,14 +80,14 @@ void mousePressed() {
         fill(boxColors[i]);
         stroke(boxColors[i]);
         rect(0, 480, 640, 5);
-        dataPacket = 'c:' + boxColors[i];
+        dataPacket = "c:" + str(boxColors[i]);
       }
     }
     if (overBox(mouseX, mouseY, 590, 490)) {
       fill(#FFFFFF);
       stroke(#FFFFFF);
       rect(0, 480, 640, 5);
-      dataPacket = '90:' + 
+      dataPacket = "c:" + color(#000000);
     }    
   }
   fill(126);
@@ -145,6 +145,24 @@ void mouseDragged() {
 void keyPressed() {
     if(key == 'r') {
         background(102);
+        fill(#FFFFFF);
+        rect(0, 480, 640, 5);
+  
+        fill(255,0,0); // Red rectangle
+        rect(10, 490, boxSize, boxSize);
+        fill(0,255,0); // Green rectangle
+        rect(60, 490, boxSize, boxSize);
+        fill(0,0,255); // Blue rectangle
+        rect(110, 490, boxSize, boxSize);
+        fill(255,255,0); // Yellow rectangle
+        rect(160, 490, boxSize, boxSize);
+        fill(0,255,255);  // Cyan rectangle
+        rect(210, 490, boxSize, boxSize);
+        fill(255,0,255); // Magenta rectangle
+        rect(260, 490, boxSize, boxSize);
+        fill(255,255,255); // Magenta rectangle
+        rect(590, 490, boxSize, boxSize);
+        fill(126);
     }
 }
 
