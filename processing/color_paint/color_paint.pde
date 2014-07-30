@@ -146,6 +146,7 @@ void keyPressed() {
     if(key == 'r') {
         background(102);
         fill(#FFFFFF);
+        stroke(0);
         rect(0, 480, 640, 5);
   
         fill(255,0,0); // Red rectangle
@@ -163,6 +164,7 @@ void keyPressed() {
         fill(255,255,255); // Magenta rectangle
         rect(590, 490, boxSize, boxSize);
         fill(126);
+        dataPacket = "c:" + color(#000000);
     }
 }
 
