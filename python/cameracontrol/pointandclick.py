@@ -24,7 +24,7 @@ class swarm:
         self.lastDistances = [None, None] #None
 #       self.waypoints = "320,240 : 1,100 : 20,20 : 30,40 : 50,40"
 	#self.waypoints = [(450, 100), (450, 350), (100, 350), (100,100)]
-	self.waypoints = []
+        self.waypoints = []
         self.check = [0,1]      
         self.initCheck = [0,1]
         self.reverse = [False, False]
@@ -43,7 +43,11 @@ class swarm:
        
         print "__INIT__"
     # Close the serial connection
-
+    
+    # Reads data from the processing program.
+    # There are two types of command, waypoint and color.  Color commands are formatted as c:#RRGGBB where
+    # #RRGGBB is a hex representation of an RGB value.
+    # Waypoint commands are of the form x1,y1:x2,y2:x3,y3: etc.
     def readData(self):
         processingSock = socket.socket()
 
@@ -59,23 +63,23 @@ class swarm:
 #        print "received data, ", data
         if data != "No data":
             points = data.split(":")
-            if (points[0]=='c'):
+            if (points[0]=='c'):  # Is the data a color command?
 #                colorval = (byte)points[1]
                 print(points[1])
-                color = self.hex_to_rgb(points[1])
+                color = self.hex_to_rgb(points[1])  # Converts the hex value to a list color[0] = red, color[1] = green, color[2] = blue
                 print color
                 for i in range(self.NUM_ROBOTS):
-                    message = str(i)+',10,'+str(color[0])+','+str(color[1])+','+str(color[2])
-                    self.sock.sendall(message)
+                    message = str(i)+',10,'+str(color[0])+','+str(color[1])+','+str(color[2])  # Format message to send via bluetooth
+                    self.sock.sendall(message) # Send the message
                     print message
-            else:
+            else: # The data is a waypoint command
             #print points, " split up points"
         
                 tempWaypoints = self.waypoints
                 self.waypoints = []
                 if points:
                     self.waypoints = []
-                    for point in points:
+                    for point in points: # Populate the list of waypoints with the command.
                         p = point.split(",")
                         print p
                         x = int(p[0])
@@ -85,7 +89,7 @@ class swarm:
                     points = None
                     print "tempwaypoints: ", tempWaypoints
                     print "waypoints: ", self.waypoints
-                    if tempWaypoints != self.waypoints:
+                    if tempWaypoints != self.waypoints: # Has the command changed? If so, move back to the beginning of the waypoint list as it is reset
                         self.check = [0,1]#self.initCheck
                         print "Resetting check"
                     print "is check reset: ", self.check
@@ -102,6 +106,8 @@ class swarm:
     def write(string):
         pass
 
+
+# Populates the waypoint array with the starting positions.
     def initialize(self):
         time.sleep(0.05)
         while 1:
@@ -115,6 +121,7 @@ class swarm:
                     self.waypoints.append((h[i][2], h[i][3]))
                 return
 
+# Convert a hex value to a list of form [red, green, blue]
     def hex_to_rgb(self, color):
         value = int(color)
         blue =  value & 255
@@ -136,9 +143,10 @@ class swarm:
     def step(self):
         #print "step"
         #self.waypoints = [(320,240),(200,200)] 
-        self.readData()
+        self.readData() # Populate the waypoint list.
 
         message = ""
+        # PD control parameters
         P = 3.0
         D = 0.4
         DMax = 0.3
@@ -150,20 +158,23 @@ class swarm:
 
         #distances = self.swis.generateDistances(self.waypoints) # Current distances
         # Go through each robot and update its velocity
-        # TODO add functionality to move to next waypoint
         for i in range(0, self.NUM_ROBOTS):
             time.sleep(0.02)
 
 
             msg = ""
-            distances, headings = self.swis.generateHeadings(self.waypoints[self.check[i]]) # Current headings   
+            distances, headings = self.swis.generateHeadings(self.waypoints[self.check[i]]) # Heading to next waypoint
             if distances == None and headings == None:
                 return
+            # Get heading in radians
             heading = headings[i][1]
             print str(i), "heading, ", heading
             # P control
             #output = P * heading
-
+            
+            # If this is the first time through the loop, populate the waypoints with a point 100 pixels dead ahead.
+            # The robot then attempts to move toward the point. This is to determine which direction it starts in for
+            # tracking that does not have intrinsic directionality (e.g. single color tracking)
             if not self.initialized[i]:
  #               print "Initializing statement 1"
                 distances, headings = self.swis.generateHeadings(self.startPos[i])
@@ -178,8 +189,9 @@ class swarm:
             # If the angle isn't too big, use D control
             if self.lastHeadings[i] != None:
                 lastHeading = self.lastHeadings[i]
-                if abs(abs(heading - lastHeading) - 3.1416) < 0.2 :
-                    self.reverse[i] = not self.reverse[i]
+                if abs(abs(heading - lastHeading) - 3.1416) < 0.2 : # If the heading flips 180 degrees during non-directional tracking
+                    self.reverse[i] = not self.reverse[i] # Flip the direction of the robot
+            # Deal with the robot facing the wrong direction
                 if self.reverse[i]:
                     if heading < 0.0:
                         heading = heading + 3.141
@@ -193,6 +205,7 @@ class swarm:
 #                        heading = heading - 3.142
 #                        if heading < -3.142:
 #                            heading = 6.281+heading
+# D control
                 if abs(heading - lastHeading) < DMax:
                     output += D * (heading - lastHeading)
 #                if abs(heading - lastHeading) > 2.0:                
@@ -200,6 +213,7 @@ class swarm:
 #                    if heading < -3.142:
 #                        heading = 6.281 + heading
             print str(i), "new heading, ", heading
+# P control
             output += P*heading
 
 
@@ -214,7 +228,7 @@ class swarm:
             leftVelocity = max(min((forward - rotate), motorMax), -1*motorMax)
             rightVelocity = max(min((forward + rotate), motorMax), -1*motorMax)
 
-            #Alright! Now convert to 0 to 180 instead of -motorMax to +motorMax
+            #Alright! Now convert to 80 to 100 instead of -motorMax to +motorMax
             print 'before mapping to servo vals', leftVelocity, rightVelocity
             leftVelocity = translate(leftVelocity, -1*motorMax, motorMax, 80,100)
             rightVelocity = translate(rightVelocity, -1*motorMax, motorMax, 80,100)
@@ -227,6 +241,7 @@ class swarm:
             # next waypoint for that robot
             distance = distances[i][1]
             print distance
+# Determine initial directionality of the robot
             if not self.initialized[i]:
                 print "Initializing..."
                 if distance < 80:
@@ -238,6 +253,7 @@ class swarm:
                     self.initialized[i] = True
                     print "Backwards"
                     return
+# When the robot hits a waypoint, pause and switch to the next waypoint
             elif distance < triggerDistance:
                 print "Trigger"
                 # TODO add code to move to next waypoint
@@ -255,7 +271,7 @@ class swarm:
  #           print message
 	    print "waypoints, ", self.waypoints[self.check[i]]
             self.sock.sendall(message)
-            
+# Populate previous heading lists
             self.secondLastHeadings[i] = self.lastHeadings[i]
             self.lastHeadings[i] = headings[i][1]
         return
@@ -264,8 +280,8 @@ class swarm:
         #self.ser.write(message)
 #        time.sleep(0.04)
 
-    # Uses pySerial to send left and right wheel velocity
-    # commands to a given robot.
+    # Sets the velocity of a robot
+    # Used primarily to stop the robots on shutdown
     def setVelocity(self, left, right, robot):
         message = str(robot) + ',20,' + str(left) + ',' + str(right)
    #     print message

@@ -54,7 +54,8 @@ class swarm:
 
     def write(string):
         pass
-
+    
+    # Populates the starting position list
     def initialize(self):
         time.sleep(0.05)
         while 1:
@@ -80,6 +81,7 @@ class swarm:
     # given a list of waypoints.
     def step(self):
         message = ""
+        # PD control variables
         P = 3.0
         D = 0.4
         DMax = 0.3
@@ -91,7 +93,6 @@ class swarm:
 
         #distances = self.swis.generateDistances(self.waypoints) # Current distances
         # Go through each robot and update its velocity
-        # TODO add functionality to move to next waypoint
         for i in range(0, self.NUM_ROBOTS):
             time.sleep(0.02)
 
@@ -104,7 +105,9 @@ class swarm:
             print str(i), "heading, ", heading
             # P control
             #output = P * heading
-
+            
+            # Figure out which direction the robot is heading. Set the first waypoint to a spot 100 pixels
+            # dead ahead.  If the robot starts moving away from it, the program knows the robot is backwards.
             if not self.initialized[i]:
  #               print "Initializing statement 1"
                 distances, headings = self.swis.generateHeadings(self.startPos[i])
@@ -116,7 +119,7 @@ class swarm:
                 distances, headings = self.swis.generateHeadings((destX, destY))
                 heading = headings[i][1]
 #                print "Starting distances: ", distances[i][1]
-            # If the angle isn't too big, use D control
+# If the directionality suddenly flips 180 degrees, which happens during single-color tracking.
             if self.lastHeadings[i] != None:
                 lastHeading = self.lastHeadings[i]
                 if abs(abs(heading - lastHeading) - 3.1416) < 0.2 :
@@ -134,6 +137,7 @@ class swarm:
 #                        heading = heading - 3.142
 #                        if heading < -3.142:
 #                            heading = 6.281+heading
+                # D control
                 if abs(heading - lastHeading) < DMax:
                     output += D * (heading - lastHeading)
 #                if abs(heading - lastHeading) > 2.0:                
@@ -141,6 +145,7 @@ class swarm:
 #                    if heading < -3.142:
 #                        heading = 6.281 + heading
             print str(i), "new heading, ", heading
+            # P control
             output += P*heading
 
 
@@ -155,7 +160,7 @@ class swarm:
             leftVelocity = max(min((forward - rotate), motorMax), -1*motorMax)
             rightVelocity = max(min((forward + rotate), motorMax), -1*motorMax)
 
-            #Alright! Now convert to 0 to 180 instead of -motorMax to +motorMax
+            #Alright! Now convert to 80 to 100 instead of -motorMax to +motorMax
             print 'before mapping to servo vals', leftVelocity, rightVelocity
             leftVelocity = translate(leftVelocity, -1*motorMax, motorMax, 80,100)
             rightVelocity = translate(rightVelocity, -1*motorMax, motorMax, 80,100)
@@ -168,7 +173,7 @@ class swarm:
             # next waypoint for that robot
             distance = distances[i][1]
             print distance
-            if not self.initialized[i]:
+            if not self.initialized[i]: # This is the step where the robot determines what its initial direction is
                 print "Initializing..."
                 if distance < 80:
                     print "Forward"
@@ -179,12 +184,12 @@ class swarm:
                     self.initialized[i] = True
                     print "Backwards"
                     return
+                # If the robot hits a waypoint
             elif distance < triggerDistance:
   #              print "Trigger"
-                # TODO add code to move to next waypoint
                 #leftVelocity = 90
                 #rightVelocity = 90
-                self.check[i] = self.check[i]+1
+                self.check[i] = self.check[i]+1 # Scroll to the next waypoint
 		self.check[i] = self.check[i]%len(self.waypoints)
   #          message = message + str(i) + "," + str(leftVelocity) + "," + str(rightVelocity) + ":"
 	        
@@ -201,8 +206,7 @@ class swarm:
         #self.ser.write(message)
 #        time.sleep(0.04)
 
-    # Uses pySerial to send left and right wheel velocity
-    # commands to a given robot.
+    # Stops a robot
     def setVelocity(self, left, right, robot):
         message = str(robot) + ',20,90,90'
    #     print message
