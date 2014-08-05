@@ -1,0 +1,6 @@
+1 - Make the LED smoothly pulse white
+2 - Make the LED smoothly shift colors
+3 - Make a square
+3 - Make the LED smoothly shift colors while moving in a square
+4 - Make the LED change colors at every waypoint in the waypoint demo
+5 - Make a typing interface for the waypoint demo.  Make the robot go to a waypoint when you type the corresponding number.
